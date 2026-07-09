@@ -127,5 +127,3 @@ export const listings: Listing[] = [
     tags: ['SeaTrips','Fishing','Swimming','Kuwait'],
   },
 ]
-
-export const related = listings.slice(1).map(listing => listing.title)
