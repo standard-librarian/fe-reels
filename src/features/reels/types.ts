@@ -4,6 +4,7 @@ export type Listing = {
   title: string; price: string; oldPrice?: string; discount?: string; negotiable: boolean
   location: string; condition: string; views: string; posted: string; favCount: string
   delivery: boolean; warranty?: string; aspectLabel: string; aspectRatio: string
+  videoUrl: string
   descShort: string; descFull: string; specs: Spec[]; tags: string[]
   sellerRating: string; sellerReviews: string; sellerListings: string; sellerResp: string; sellerSince: string
 }

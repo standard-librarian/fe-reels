@@ -1,9 +1,76 @@
 import type { Listing } from '../types'
 
-const common = { verified:true, negotiable:true, delivery:true, sellerRating:'4.9', sellerReviews:'1,204', sellerListings:'312', sellerResp:'5 min', sellerSince:'8 yrs' }
+const common = {
+  verified: true,
+  negotiable: true,
+  delivery: false,
+  aspectLabel: '9:16 · VIDEO',
+  aspectRatio: '9 / 16',
+  sellerRating: '4.8',
+  sellerReviews: 'Verified',
+  sellerListings: 'Active',
+  sellerResp: 'Usually responds quickly',
+  sellerSince: '4Sale seller',
+}
+
+// Sanitized snapshot of public, video-enabled motor listings from the
+// production advertisement index. Contact and account data are excluded.
 export const listings: Listing[] = [
- { ...common,id:'ptrl-22',sellerInit:'AM',sellerName:'Al Mulla Motors',sellerCat:'Verified car dealer',title:'2022 Nissan Patrol Platinum V8',price:'12,750',oldPrice:'14,300',discount:'-11%',location:'Al Rai, Kuwait',condition:'Used · Excellent',views:'18,204',posted:'2 days ago',favCount:'842',warranty:'Dealer warranty',aspectLabel:'9:16 · VERTICAL',aspectRatio:'9 / 16',descShort:'Full-option Patrol Platinum, single owner, agency-maintained with full service history. Sunroof, 360 camera, BOSE sound, and brand-new tyres.',descFull:'Full-option Patrol Platinum, single owner, agency-maintained with full service history. Sunroof, 360 camera, BOSE sound, and brand-new tyres. Non-smoker, no accidents, and passed inspection. Bank finance and trade-ins welcome. Serious buyers only — call to arrange a test drive at our Al Rai showroom.',specs:[{k:'Year',v:'2022'},{k:'Mileage',v:'46,000 km'},{k:'Transmission',v:'Automatic'},{k:'Fuel',v:'Petrol'},{k:'Engine',v:'5.6L V8'},{k:'Cylinders',v:'8'},{k:'Exterior',v:'Pearl White'},{k:'Interior',v:'Beige leather'}],tags:['Patrol','SUV','FullOption','Platinum','KuwaitCars'] },
- { ...common,id:'lc-20',sellerInit:'KA',sellerName:'Khaled Autos',sellerCat:'Trusted seller',title:'2020 Toyota Land Cruiser GXR',price:'15,900',location:'Hawally, Kuwait',condition:'Used · Very good',views:'9,882',posted:'5 days ago',favCount:'531',delivery:false,aspectLabel:'1:1 · SQUARE',aspectRatio:'1 / 1',descShort:'GXR grade with sunroof and leather seats. Clean interior, well kept, agency service history available on request.',descFull:'GXR grade with sunroof and leather seats. Clean interior, well kept, agency service history available on request. Recently changed tyres and battery. Second owner, ready to drive.',specs:[{k:'Year',v:'2020'},{k:'Mileage',v:'88,500 km'},{k:'Transmission',v:'Automatic'},{k:'Fuel',v:'Petrol'},{k:'Engine',v:'4.0L V6'},{k:'Exterior',v:'Black'}],tags:['LandCruiser','GXR','Toyota','SUV'] },
- { ...common,id:'x5-23',sellerInit:'BW',sellerName:'Bavaria Wheels',sellerCat:'Premium dealer',title:'2023 BMW X5 xDrive40i M-Sport',price:'21,400',oldPrice:'23,000',discount:'-7%',negotiable:false,location:'Salmiya, Kuwait',condition:'Used · Like new',views:'27,650',posted:'Today',favCount:'1,190',warranty:'Until 2027',aspectLabel:'16:9 · HORIZONTAL',aspectRatio:'16 / 9',descShort:'Under agency warranty until 2027. M-Sport package, panoramic roof, Harman Kardon, and heads-up display.',descFull:'Under agency warranty until 2027. M-Sport package, panoramic roof, Harman Kardon, and heads-up display. Showroom condition, still smells new.',specs:[{k:'Year',v:'2023'},{k:'Mileage',v:'19,200 km'},{k:'Transmission',v:'Automatic'},{k:'Engine',v:'3.0L Turbo'},{k:'Exterior',v:'Storm Bay'}],tags:['BMW','X5','MSport','Luxury','Warranty'] },
+  {
+    ...common,
+    id: '20999479', sellerInit: '4S', sellerName: '4Sale Seller', sellerCat: 'Land Cruiser',
+    title: '2009 Toyota Land Cruiser Pickup', price: '3,200', location: 'Kuwait',
+    condition: 'Used · Inspection recommended', views: 'New', posted: 'Today', favCount: '0',
+    videoUrl: 'https://media.q84sale.com/videos/1783776674450715564.mp4',
+    descShort: '2009 Toyota Land Cruiser Pickup (Shas) in original paint, with some notes on the body.',
+    descFull: '2009 Toyota Land Cruiser Pickup (Shas) in original paint. The seller notes that there are some observations on the body. Inspect the vehicle and confirm all details before purchase.',
+    specs: [{k:'Year',v:'2009'},{k:'Make',v:'Toyota'},{k:'Model',v:'Land Cruiser Pickup'},{k:'Location',v:'Kuwait'}],
+    tags: ['Toyota','LandCruiser','Pickup','Motors'],
+  },
+  {
+    ...common,
+    id: '20999442', sellerInit: '4S', sellerName: '4Sale Seller', sellerCat: 'Land Cruiser',
+    title: '2024 Land Cruiser GXR — Agency Condition', price: '19,200', location: 'Ahmadi, Kuwait',
+    condition: 'Used · Agency condition', views: 'New', posted: 'Today', favCount: '0', warranty: 'Seller states agency condition',
+    videoUrl: 'https://media.q84sale.com/videos/1783776549505425234.mp4',
+    descShort: '2024 Land Cruiser GXR without turbo, driven 55,000 km and described as accident-free with agency paint.',
+    descFull: '2024 Land Cruiser GXR without turbo. The listing states 55,000 km, agency condition, accident-free inspection, and agency paint. Verify mileage and condition during inspection.',
+    specs: [{k:'Year',v:'2024'},{k:'Mileage',v:'55,000 km'},{k:'Model',v:'Land Cruiser GXR'},{k:'Location',v:'Ahmadi'}],
+    tags: ['Toyota','LandCruiser','GXR','SUV'],
+  },
+  {
+    ...common,
+    id: '20999118', sellerInit: '4S', sellerName: '4Sale Seller', sellerCat: 'BMW Motorbikes',
+    title: '2015 BMW S1000R', price: '2,500', location: 'Zahra, Hawalli',
+    condition: 'Used · Excellent', views: 'New', posted: 'Today', favCount: '0',
+    videoUrl: 'https://media.q84sale.com/videos/9280bbed-5641-4856-90bd-b1a621ab34cf.mp4',
+    descShort: 'BMW S1000R with 24,000 km, recent full service, new tyres, and Rizoma, Wunderlich and Öhlins upgrades.',
+    descFull: '2015 BMW S1000R with 24,000 km. The public listing describes a major service at 19,500 km, a recent full service, new tyres, agency parts, and Rizoma, Wunderlich, carbon and Öhlins upgrades.',
+    specs: [{k:'Year',v:'2015'},{k:'Mileage',v:'24,000 km'},{k:'Make',v:'BMW'},{k:'Color',v:'Black'}],
+    tags: ['BMW','S1000R','Motorbike','Performance'],
+  },
+  {
+    ...common,
+    id: '20999059', sellerInit: '4S', sellerName: '4Sale Seller', sellerCat: 'Grand Cherokee',
+    title: '2002 Jeep Grand Cherokee 4WD', price: '750', location: 'Kuwait City, Kuwait',
+    condition: 'Used · Maintained', views: 'New', posted: 'Today', favCount: '0',
+    videoUrl: 'https://media.q84sale.com/videos/1783772550676478590.mp4',
+    descShort: 'Grand Cherokee 4WD with 293,580 km and recently replaced suspension, shock absorbers, radiator and electric fan.',
+    descFull: '2002 Jeep Grand Cherokee 4WD with 293,580 km at publication. The seller reports replacement of the suspension system, shock absorbers, radiator, electric fan and driveshaft.',
+    specs: [{k:'Year',v:'2002'},{k:'Mileage',v:'293,580 km'},{k:'Drive',v:'4WD'},{k:'Interior',v:'Beige'}],
+    tags: ['Jeep','GrandCherokee','4WD','SUV'],
+  },
+  {
+    ...common,
+    id: '20998999', sellerInit: '4S', sellerName: '4Sale Seller', sellerCat: 'Nissan Patrol',
+    title: '2026 Nissan Patrol Titanium Plus', price: '26,800', location: 'Ardiya, Farwaniyah',
+    condition: 'New · Zero mileage', views: 'New', posted: 'Today', favCount: '0', warranty: 'Al-Babtain imported', negotiable: false,
+    videoUrl: 'https://media.q84sale.com/videos/1783579344563514196.mp4',
+    descShort: '2026 Patrol Titanium Plus Twin Turbo with diamond seats, highest trim, Al-Babtain import and zero mileage.',
+    descFull: '2026 Nissan Patrol Titanium Plus Twin Turbo. The public listing describes the highest trim with diamond seats, Al-Babtain import and zero mileage, with a final asking price of KD 26,800.',
+    specs: [{k:'Year',v:'2026'},{k:'Mileage',v:'0 km'},{k:'Engine',v:'Twin Turbo'},{k:'Interior',v:'Tan'}],
+    tags: ['Nissan','Patrol','TitaniumPlus','New'],
+  },
 ]
-export const related = ['2021 Nissan Patrol SE','2020 Patrol Titanium','2023 Toyota Prado TXL','2019 GMC Yukon Denali']
+
+export const related = listings.slice(1).map(listing => listing.title)
