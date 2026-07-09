@@ -1,0 +1,11 @@
+export type ViewMode = 'mobile' | 'desktop'
+export type DemoState = 'live' | 'loading' | 'empty' | 'error'
+export type Spec = { k: string; v: string }
+export type Listing = {
+  id: string; sellerInit: string; sellerName: string; sellerCat: string; verified: boolean
+  title: string; price: string; oldPrice?: string; discount?: string; negotiable: boolean
+  location: string; condition: string; views: string; posted: string; favCount: string
+  delivery: boolean; warranty?: string; aspectLabel: string; aspectRatio: string
+  descShort: string; descFull: string; specs: Spec[]; tags: string[]
+  sellerRating: string; sellerReviews: string; sellerListings: string; sellerResp: string; sellerSince: string
+}

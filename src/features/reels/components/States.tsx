@@ -1,0 +1,5 @@
+import { RefreshCw, Video, WifiOff } from 'lucide-react'
+import type { DemoState, ViewMode } from '../types'
+export function EmptyState({error,onRetry}:{error?:boolean;onRetry:()=>void}) { const Icon=error?WifiOff:Video; return <div className="state"><span><Icon/></span><h2>{error?"Couldn't load videos":'No reels here yet'}</h2><p>{error?'Something went wrong while streaming this reel. Check your connection and try again.':'There are no video listings in this category right now. Be the first to post one and reach thousands of buyers.'}</p><button className="primary" onClick={onRetry}>{error?<RefreshCw/>:null}{error?'Try again':'Post a video listing'}</button></div> }
+export function LoadingState({view}:{view:ViewMode}) { return <div className={`skeleton skeleton--${view}`}><div className="sk-video shimmer"/><div className="sk-copy"><i/><i/><i/><i/></div></div> }
+export function StateView({state,view,onRetry}:{state:DemoState;view:ViewMode;onRetry:()=>void}) { if(state==='loading') return <LoadingState view={view}/>; return <EmptyState error={state==='error'} onRetry={onRetry}/> }
