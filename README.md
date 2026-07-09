@@ -1,6 +1,6 @@
 # Q84Sale Reels
 
-A responsive React implementation of the `Q84Sale-Reels-handoff` prototype.
+A responsive, standalone reels experience intended to run as a 4Sale webview.
 
 ## Run locally
 
@@ -25,9 +25,10 @@ src/
 
 The listing data is kept outside the UI, components are module-level and focused, navigation callbacks are stable, and transient interaction state stays close to the page that owns it. When an API is introduced, replace `data/listings.ts` with a repository/query layer without changing the presentation components.
 
-## Prototype controls
+## Webview integration
 
-- Switch between Mobile and Desktop in the header.
-- Preview Live, Loading, Empty, and Error states.
-- Navigate reels with the arrow keys, mouse wheel, or vertical swipe. Gesture input is locked briefly after a successful navigation so one physical gesture always advances exactly one reel.
-- Press `M` to toggle mute.
+- The app fills the available webview viewport; it does not render website navigation or demo controls.
+- Mobile uses a full-screen reel with a details bottom sheet and safe-area spacing.
+- Wide webviews place the reel and its details side by side.
+- Replace `data/listings.ts` with the website API adapter and connect the call, chat, favorite, and share callbacks to the native/web integration layer.
+- Navigate with vertical swipes, a mouse wheel, or arrow keys. Press `M` to toggle mute when a keyboard is available.
