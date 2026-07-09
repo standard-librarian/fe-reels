@@ -32,3 +32,4 @@ The listing data is kept outside the UI, components are module-level and focused
 - Wide webviews place the reel and its details side by side.
 - Replace `data/listings.ts` with the website API adapter and connect the call, chat, favorite, and share callbacks to the native/web integration layer.
 - Navigate with vertical swipes, a mouse wheel, or arrow keys. Press `M` to toggle mute when a keyboard is available.
+- The next two videos are kept in a hidden rolling preload pool; each is warmed through approximately its first three seconds to reduce playback stalls between reels.
