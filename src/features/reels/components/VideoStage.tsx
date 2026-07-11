@@ -93,9 +93,11 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
    }}
    onPointerCancel={() => { pointerStartY.current = null; resetPosition() }}
  >
-   <div className="video-stage__media" style={{aspectRatio:listing.aspectRatio}}>
+   <div className="video-stage__media">
      <video className="video-stage__glow" src={listing.videoUrl} muted autoPlay loop playsInline preload="metadata" aria-hidden="true"/>
-     <video className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+     <div className="video-stage__frame">
+       <video className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+     </div>
    </div>
    <div className="seller"><div className="avatar">{listing.sellerInit}</div><div><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small>{listing.sellerCat}</small></div><button className="glass-button" onClick={onMute}>{muted?<VolumeX/>:<Volume2/>}</button></div>
  </div>
