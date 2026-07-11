@@ -5,7 +5,7 @@ import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { VideoStage } from '../features/reels/components/VideoStage'
 import { VideoPreloader } from '../features/reels/components/VideoPreloader'
-import { listings, related } from '../features/reels/data/listings'
+import { listings } from '../features/reels/data/listings'
 
 export function App() {
   const [index, setIndex] = useState(0)
@@ -67,7 +67,6 @@ export function App() {
     <VideoPreloader urls={upcomingVideoUrls}/>
     <section className="reels-player" aria-label="Video listings">
       {video}
-      <span className="index">{index + 1} / {listings.length}</span>
       <div className="action-rail">{actions}</div>
       {!detailsOpen ? <button className="view-details" onClick={() => setDetailsOpen(true)}>
         <ChevronUp/> View details · <b>KD {listing.price}</b>
@@ -79,10 +78,6 @@ export function App() {
 
     <aside className="reels-details">
       <Details listing={listing} expanded={descriptionExpanded} onExpand={() => setDescriptionExpanded(current => !current)} onShare={() => setShareOpen(true)} favorite={favorites.has(listing.id)} onFavorite={toggleFavorite}/>
-      <h2 className="related-title">You may also like</h2>
-      <div className="related">{related.map((title, itemIndex) => <article key={title}>
-        <div/><small>{title}</small><b>KD {(10900 + itemIndex * 850).toLocaleString()}</b>
-      </article>)}</div>
     </aside>
 
     {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)}/> : null}
