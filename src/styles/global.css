@@ -3,7 +3,7 @@
 @font-face{font-family:'Sakr Soft';src:url('/fonts/ss_sakr_soft_medium.otf') format('opentype');font-weight:500 600;font-display:swap}
 @font-face{font-family:'Sakr Soft';src:url('/fonts/ss_sakr_soft_bold.otf') format('opentype');font-weight:700 900;font-display:swap}
 
-:root{--brand-primary:#0062ff;--brand-navy:#021442;--brand-text:#0a1243;--brand-muted:#59688e;--brand-bg:#f7f8fa;--brand-section:#f5f6f9;--brand-border:#dfe1ec;--brand-divider:#e9ebf2;--urgent:#f5610a;--fav:#ff3b5c;font-family:'Sakr Soft',Arial,sans-serif;color:var(--brand-text);background:#05070d;font-synthesis:none}
+:root{--brand-primary:#0062ff;--brand-navy:#021442;--brand-text:#0a1243;--brand-muted:#59688e;--brand-bg:#f7f8fa;--brand-section:#f5f6f9;--brand-border:#dfe1ec;--brand-divider:#e9ebf2;--urgent:#f5610a;--fav:#ff3b5c;font-family:'Sakr Soft',Arial,sans-serif;color:var(--brand-text);background:#030a1b;font-synthesis:none}
 *{box-sizing:border-box}
 html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -12,29 +12,35 @@ button{font:inherit;color:inherit;cursor:pointer}
 .video-preload{width:1px;height:1px}
 
 /* ===== layout ===== */
-.reels-webview{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#05070d}
-.reels-player{position:absolute;inset:0;overflow:hidden;background:#05070d}
+.reels-webview{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#030a1b}
+.reels-player{position:absolute;inset:0;overflow:hidden;background:#030a1b;display:grid;place-items:center}
+/* chrome overlay. base = portrait/full-bleed (video fills width, controls overlaid at the screen edges). when the viewport is wider than 9:16 the video is letterboxed and the chrome shrinks to hug it (see min-aspect-ratio block). */
+.stage-chrome{position:absolute;inset:0;pointer-events:none}
 
 /* ===== video (9:16, kept as ours) ===== */
-.video-stage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;background:#05070d;will-change:transform,opacity}
-.video-stage__media{position:absolute;inset:0;overflow:hidden;background:#05070d;display:grid;place-items:center}
+.video-stage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;background:#030a1b;will-change:transform,opacity}
+.video-stage__media{position:absolute;inset:0;overflow:hidden;background:#030a1b;display:grid;place-items:center}
 .video-stage__frame{position:relative;z-index:2;height:100%;max-width:100%;aspect-ratio:9 / 16;overflow:hidden}
 .video-stage__video{width:100%;height:100%;display:block;object-fit:cover;background:#000}
 .stage-gradient{position:absolute;top:0;left:0;right:0;height:120px;z-index:3;background:linear-gradient(rgba(0,4,12,.55),transparent);pointer-events:none}
 
 /* ===== overlay chrome (anchored to player card) ===== */
-.seller{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;z-index:5;display:flex;align-items:center;gap:10px;color:#fff}
+.seller{position:absolute;left:14px;right:84px;bottom:max(74px,calc(env(safe-area-inset-bottom) + 66px));z-index:5;display:flex;flex-direction:column;gap:8px;color:#fff}
+.seller__row{display:flex;align-items:center;gap:10px}
 .seller__meta{min-width:0;flex:1 1 auto}
 .seller strong,.seller small{display:flex;align-items:center;gap:5px}
 .seller strong{font-size:14px;font-weight:700;text-shadow:0 1px 6px rgba(0,0,0,.4)}
 .seller small{margin-top:2px;font-size:11px;color:#ffffffc7;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+.seller__title{margin:0;font-size:14px;font-weight:600;line-height:1.35;text-shadow:0 1px 6px rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .avatar{width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #ffffff40;border-radius:12px;background:#ffffff29;backdrop-filter:blur(8px);color:#fff;font-weight:800}
 .avatar--blue{border:0;background:#e7edff;color:var(--brand-primary)}
 .glass-button{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border:1px solid #ffffff3d;border-radius:50%;background:#00000047;color:#fff;backdrop-filter:blur(8px)}
 .glass-button svg{width:19px}
-.stage-controls{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;z-index:6;display:none;gap:8px}
-.reel-counter{position:absolute;top:60px;left:14px;z-index:5;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.32);backdrop-filter:blur(8px);color:#fff;font-size:11px;font-weight:600}
-.action-rail{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));z-index:6;display:flex;flex-direction:column;gap:12px}
+.stage-controls{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;z-index:6;display:none;gap:8px;pointer-events:auto}
+.stage-controls__fullscreen{display:none}
+/* mute lives in the action rail on mobile; hidden on desktop where the top-right controls take over */
+.action--rail-mute{display:flex}
+.action-rail{position:absolute;right:12px;bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));z-index:6;display:flex;flex-direction:column;gap:12px;pointer-events:auto}
 .action{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:#fff;font-size:10px;font-weight:600}
 .action__circle{width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffffff38;border-radius:50%;background:#00000052;backdrop-filter:blur(8px);transition:transform .16s ease,background-color .16s ease,color .16s ease,box-shadow .16s ease}
 .action__circle--primary{background:var(--brand-primary);box-shadow:0 6px 16px rgba(0,98,255,.5)}
@@ -44,8 +50,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .reel-nav{position:absolute;right:14px;top:50%;transform:translateY(-50%);z-index:6;display:none;flex-direction:column;align-items:center;gap:12px;color:#fff}
 .reel-nav button{width:52px;height:52px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#00000057;backdrop-filter:blur(8px);color:#fff;transition:transform .16s ease}
 .reel-nav button:active{transform:scale(.92)}.reel-nav span{font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.5)}.reel-nav svg{width:22px}
-.sound-hint{position:absolute;left:14px;bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:6;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:0;border-radius:999px;background:rgba(0,0,0,.34);backdrop-filter:blur(8px);color:#fff;font-size:11px;font-weight:600}.sound-hint svg{width:16px}
-.view-details{position:absolute;left:50%;bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));transform:translateX(-50%);z-index:6;height:44px;display:flex;align-items:center;gap:7px;padding:0 20px;border:0;border-radius:999px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);font-size:13px;font-weight:700;white-space:nowrap;transition:transform .16s ease}
+.view-details{position:absolute;left:50%;bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));transform:translateX(-50%);z-index:6;height:44px;display:flex;align-items:center;gap:7px;padding:0 20px;border:0;border-radius:999px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);font-size:13px;font-weight:700;white-space:nowrap;transition:transform .16s ease;pointer-events:auto}
 .view-details:active{transform:translateX(-50%) scale(.95)}
 .view-details svg{width:19px;color:var(--brand-primary)}.view-details__dot{color:#b6bad3}.view-details b{color:var(--brand-primary)}
 
@@ -94,18 +99,25 @@ button{font:inherit;color:inherit;cursor:pointer}
 .video-stage--enter-up{animation:reel-enter-up .28s cubic-bezier(.22,1,.36,1) both}.video-stage--enter-down{animation:reel-enter-down .28s cubic-bezier(.22,1,.36,1) both}.video-stage--leaving,.video-stage--snapping{transition:transform .24s cubic-bezier(.22,1,.36,1),opacity .2s ease}
 @keyframes reel-enter-up{from{transform:translate3d(0,32%,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}@keyframes reel-enter-down{from{transform:translate3d(0,-32%,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}@keyframes sheet-up{from{transform:translate3d(0,28px,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}@keyframes fade-in{from{opacity:0}to{opacity:1}}@keyframes favorite-pop{0%,100%{transform:scale(1)}45%{transform:scale(1.22)}}@keyframes panel-in{from{transform:translate3d(24px,0,0);opacity:0}to{transform:none;opacity:1}}
 
-/* ===== desktop ===== */
-@media(min-width:900px){
-  .reels-webview{display:flex;gap:16px;padding:20px;background:var(--brand-bg)}
+/* ===== landscape / wide: video is letterboxed on the sides, so the chrome shrinks to hug the centered 9:16 card and rounds its corners ===== */
+@media (min-aspect-ratio: 9 / 16){
+  .stage-chrome{position:relative;inset:auto;height:100%;max-width:100%;aspect-ratio:9 / 16}
+  .video-stage__frame{border-radius:18px}
+  .stage-gradient{border-radius:18px 18px 0 0}
+}
+
+/* ===== large screen: rail sits beside the video, details open as a side panel ===== */
+@media (min-width:900px) and (min-aspect-ratio: 9 / 16){
+  .reels-webview{display:flex;gap:16px;padding:14px 20px;background:#030a1b}
   .reels-player{position:relative;inset:auto;flex:1 1 auto;min-width:0;border-radius:24px}
-  .seller{left:14px;right:auto;max-width:70%;padding:7px 15px 7px 7px;border-radius:999px;background:rgba(8,12,20,.5);backdrop-filter:blur(10px)}
-  .seller__meta{flex:0 1 auto}
-  .seller__mute{display:none}
+  .seller{right:14px}
   .stage-controls{display:flex}
-  .reel-counter{display:none}
-  .action-rail{display:none}
+  .stage-controls__fullscreen{display:grid}
+  .action--rail-mute{display:none}
   .reel-nav{display:flex}
   .view-details{bottom:20px}
+  .action-rail{left:calc(100% + 14px);right:auto;bottom:24px}
+  .reels-webview--details .action-rail{display:none}
   .details-panel{display:flex;position:relative;flex:0 0 auto;width:min(440px,40vw);border-radius:24px;background:#fff;overflow:hidden;animation:panel-in .34s cubic-bezier(.22,1,.36,1) both}
   .sheet{display:none}
   .reels-webview--details .reel-nav{display:none}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, Info, MessageCircle, Phone, Share2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, Info, MessageCircle, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
@@ -53,6 +53,7 @@ export function App() {
   }
 
   const actions = <>
+    <IconButton className="action--rail-mute" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)}/>
     <IconButton icon={Heart} label={listing.favCount} active={favorites.has(listing.id)} onClick={toggleFavorite}/>
     <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)}/>
     <IconButton icon={MessageCircle} label="Chat"/>
@@ -65,8 +66,6 @@ export function App() {
     muted={muted}
     enterDirection={navigationDirection}
     inputLockedUntil={inputLockedUntil}
-    index={index}
-    total={listings.length}
     onMute={() => setMuted(current => !current)}
     onFullscreen={toggleFullscreen}
     onNavigate={navigate}
@@ -76,15 +75,17 @@ export function App() {
     <VideoPreloader urls={upcomingVideoUrls}/>
     <section className="reels-player" aria-label="Video listings">
       {video}
-      <div className="action-rail">{actions}</div>
+      <div className="stage-chrome">
+        <div className="action-rail">{actions}</div>
+        {!detailsOpen && <button className="view-details" onClick={() => setDetailsOpen(true)}>
+          <Info/> View details <span className="view-details__dot">·</span> <b>KD {listing.price}</b>
+        </button>}
+      </div>
       <nav className="reel-nav" aria-label="Reel navigation">
         <button onClick={() => navigate(-1)} aria-label="Previous reel"><ChevronUp/></button>
-        <span>{index + 1} / {listings.length}</span>
         <button onClick={() => navigate(1)} aria-label="Next reel"><ChevronDown/></button>
       </nav>
-      {!detailsOpen ? <button className="view-details" onClick={() => setDetailsOpen(true)}>
-        <Info/> View details <span className="view-details__dot">·</span> <b>KD {listing.price}</b>
-      </button> : <div className="sheet">
+      {detailsOpen && <div className="sheet">
         <div className="sheet__grip"/>
         <button className="sheet__close" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown/></button>
         <div className="sheet__scroll noscroll">
