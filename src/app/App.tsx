@@ -4,6 +4,7 @@ import { Details } from '../features/reels/components/Details'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { VideoStage } from '../features/reels/components/VideoStage'
+import { VideoPreloader } from '../features/reels/components/VideoPreloader'
 import { listings, related } from '../features/reels/data/listings'
 
 export function App() {
@@ -16,6 +17,7 @@ export function App() {
   const [navigationDirection, setNavigationDirection] = useState(1)
   const [inputLockedUntil, setInputLockedUntil] = useState(0)
   const listing = listings[index]
+  const upcomingVideoUrls = [1, 2].map(offset => listings[(index + offset) % listings.length].videoUrl)
 
   const navigate = useCallback((direction: number) => {
     const now = performance.now()
@@ -62,6 +64,7 @@ export function App() {
   />
 
   return <main className="reels-webview">
+    <VideoPreloader urls={upcomingVideoUrls}/>
     <section className="reels-player" aria-label="Video listings">
       {video}
       <span className="index">{index + 1} / {listings.length}</span>
