@@ -1,5 +1,3 @@
-export type ViewMode = 'mobile' | 'desktop'
-export type DemoState = 'live' | 'loading' | 'empty' | 'error'
 export type Spec = { k: string; v: string }
 export type Listing = {
   id: string; sellerInit: string; sellerName: string; sellerCat: string; verified: boolean
