@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, MessageCircle, Phone, Share2 } from 'lucide-react'
-import { Details } from '../features/reels/components/Details'
+import { ChevronDown, ChevronUp, Heart, Info, MessageCircle, Phone, Share2 } from 'lucide-react'
+import { DetailsPanel } from '../features/reels/components/DetailsPanel'
+import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { VideoStage } from '../features/reels/components/VideoStage'
@@ -46,6 +47,11 @@ export function App() {
     return next
   })
 
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen()
+    else void document.documentElement.requestFullscreen?.()
+  }
+
   const actions = <>
     <IconButton icon={Heart} label={listing.favCount} active={favorites.has(listing.id)} onClick={toggleFavorite}/>
     <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)}/>
@@ -59,26 +65,35 @@ export function App() {
     muted={muted}
     enterDirection={navigationDirection}
     inputLockedUntil={inputLockedUntil}
+    index={index}
+    total={listings.length}
     onMute={() => setMuted(current => !current)}
+    onFullscreen={toggleFullscreen}
     onNavigate={navigate}
   />
 
-  return <main className="reels-webview">
+  return <main className={`reels-webview ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <VideoPreloader urls={upcomingVideoUrls}/>
     <section className="reels-player" aria-label="Video listings">
       {video}
       <div className="action-rail">{actions}</div>
+      <nav className="reel-nav" aria-label="Reel navigation">
+        <button onClick={() => navigate(-1)} aria-label="Previous reel"><ChevronUp/></button>
+        <span>{index + 1} / {listings.length}</span>
+        <button onClick={() => navigate(1)} aria-label="Next reel"><ChevronDown/></button>
+      </nav>
       {!detailsOpen ? <button className="view-details" onClick={() => setDetailsOpen(true)}>
-        <ChevronUp/> View details · <b>KD {listing.price}</b>
+        <Info/> View details <span className="view-details__dot">·</span> <b>KD {listing.price}</b>
       </button> : <div className="sheet">
+        <div className="sheet__grip"/>
         <button className="sheet__close" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown/></button>
-        <Details listing={listing} expanded={descriptionExpanded} onExpand={() => setDescriptionExpanded(current => !current)} onShare={() => setShareOpen(true)} favorite={favorites.has(listing.id)} onFavorite={toggleFavorite}/>
+        <div className="sheet__scroll noscroll">
+          <ListingDetails listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={toggleFavorite} onShare={() => setShareOpen(true)}/>
+        </div>
       </div>}
     </section>
 
-    <aside className="reels-details">
-      <Details listing={listing} expanded={descriptionExpanded} onExpand={() => setDescriptionExpanded(current => !current)} onShare={() => setShareOpen(true)} favorite={favorites.has(listing.id)} onFavorite={toggleFavorite}/>
-    </aside>
+    {detailsOpen ? <DetailsPanel listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={toggleFavorite}/> : null}
 
     {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)}/> : null}
   </main>
