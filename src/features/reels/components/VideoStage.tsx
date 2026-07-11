@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { BadgeCheck, PlayCircle, Volume2, VolumeX } from 'lucide-react'
+import { BadgeCheck, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 
 const SWIPE_DISTANCE = 52
@@ -93,7 +93,9 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
    }}
    onPointerCancel={() => { pointerStartY.current = null; resetPosition() }}
  >
-   <div className="video-stage__media" style={{aspectRatio:listing.aspectRatio}}><PlayCircle size={37}/><b>{listing.aspectLabel}</b><small>DROP PRODUCT VIDEO</small></div>
+   <div className="video-stage__media" style={{aspectRatio:listing.aspectRatio}}>
+     <video src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+   </div>
    <div className="seller"><div className="avatar">{listing.sellerInit}</div><div><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small>{listing.sellerCat}</small></div><button className="glass-button" onClick={onMute}>{muted?<VolumeX/>:<Volume2/>}</button></div>
  </div>
 }
