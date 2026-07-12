@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { BadgeCheck, Volume2, VolumeX } from 'lucide-react'
+import { BadgeCheck, Maximize2, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 
 const SWIPE_DISTANCE = 52
@@ -13,10 +13,11 @@ type VideoStageProps = {
  enterDirection: number
  inputLockedUntil: number
  onMute: () => void
+ onFullscreen: () => void
  onNavigate: (direction: number) => void
 }
 
-export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute,onNavigate}:VideoStageProps){
+export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute,onFullscreen,onNavigate}:VideoStageProps){
  const stageRef = useRef<HTMLDivElement>(null)
  const pointerStartY = useRef<number | null>(null)
  const dragDistance = useRef(0)
@@ -93,10 +94,24 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
    }}
    onPointerCancel={() => { pointerStartY.current = null; resetPosition() }}
  >
-   <div className="video-stage__media" style={{aspectRatio:listing.aspectRatio}}>
-     <video className="video-stage__glow" src={listing.videoUrl} muted autoPlay loop playsInline preload="metadata" aria-hidden="true"/>
-     <video className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+   <div className="video-stage__media">
+     <div className="video-stage__frame">
+       <video className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+     </div>
    </div>
-   <div className="seller"><div className="avatar">{listing.sellerInit}</div><div><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small>{listing.sellerCat}</small></div><button className="glass-button" onClick={onMute}>{muted?<VolumeX/>:<Volume2/>}</button></div>
+   <div className="stage-chrome">
+     <div className="stage-gradient" aria-hidden="true"/>
+     <div className="stage-controls">
+       <button className="glass-button" onClick={onMute} aria-label={muted?'Unmute':'Mute'}>{muted?<VolumeX/>:<Volume2/>}</button>
+       <button className="glass-button stage-controls__fullscreen" onClick={onFullscreen} aria-label="Toggle fullscreen"><Maximize2/></button>
+     </div>
+     <div className="seller">
+       <div className="seller__row">
+         <div className="avatar">{listing.sellerInit}</div>
+         <div className="seller__meta"><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small>{listing.sellerCat}</small></div>
+       </div>
+       <p className="seller__title">{listing.title}</p>
+     </div>
+   </div>
  </div>
 }
