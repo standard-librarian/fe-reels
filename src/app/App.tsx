@@ -92,7 +92,7 @@ export function App() {
       <div className="stage-chrome">
         <div className="action-rail">{actions}</div>
         {!detailsOpen && <button className="view-details" onClick={() => setDetailsOpen(true)}>
-          <Info /> View details <span className="view-details__dot">·</span> <b>KD {listing.price}</b>
+          <Info /> View details
         </button>}
       </div>
       <nav className="reel-nav" aria-label="Reel navigation">

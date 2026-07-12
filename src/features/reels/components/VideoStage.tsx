@@ -138,6 +138,7 @@ export function VideoStage({listing,muted,detailsOpen,enterDirection,inputLocked
          <div className="seller__meta"><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small><MapPin size={12}/> {listing.location}</small></div>
        </div>
        <p className="seller__title">{listing.title}</p>
+       <p className="seller__price">KD {listing.price}</p>
      </div>}
    </div>
  </div>

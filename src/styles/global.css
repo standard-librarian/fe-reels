@@ -235,6 +235,14 @@ button {
   overflow: hidden
 }
 
+.seller__price {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .5)
+}
+
 .avatar {
   width: 38px;
   height: 38px;
@@ -408,36 +416,30 @@ button {
   bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px));
   transform: translateX(-50%);
   z-index: 6;
-  height: 44px;
+  height: 42px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 20px;
+  gap: 8px;
+  padding: 0 22px;
   border: 0;
   border-radius: 999px;
   background: #fff;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+  color: var(--brand-text);
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
-  transition: transform .16s ease;
+  transition: transform .16s ease, box-shadow .16s ease;
   pointer-events: auto
 }
 
 .view-details:active {
-  transform: translateX(-50%) scale(.95)
+  transform: translateX(-50%) scale(.96);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .2)
 }
 
 .view-details svg {
-  width: 19px;
-  color: var(--brand-primary)
-}
-
-.view-details__dot {
-  color: #b6bad3
-}
-
-.view-details b {
+  width: 18px;
   color: var(--brand-primary)
 }
 
