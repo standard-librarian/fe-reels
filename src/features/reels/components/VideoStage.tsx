@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react'
-import { BadgeCheck, Maximize2, Volume2, VolumeX } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BadgeCheck, MapPin, Maximize2, Pause, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 
 const SWIPE_DISTANCE = 52
@@ -10,6 +10,7 @@ const WHEEL_RESET_MS = 120
 type VideoStageProps = {
  listing: Listing
  muted: boolean
+ detailsOpen: boolean
  enterDirection: number
  inputLockedUntil: number
  onMute: () => void
@@ -17,8 +18,9 @@ type VideoStageProps = {
  onNavigate: (direction: number) => void
 }
 
-export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute,onFullscreen,onNavigate}:VideoStageProps){
+export function VideoStage({listing,muted,detailsOpen,enterDirection,inputLockedUntil,onMute,onFullscreen,onNavigate}:VideoStageProps){
  const stageRef = useRef<HTMLDivElement>(null)
+ const videoRef = useRef<HTMLVideoElement>(null)
  const pointerStartY = useRef<number | null>(null)
  const dragDistance = useRef(0)
  const wheelDistance = useRef(0)
@@ -26,6 +28,30 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
  const transitionTimer = useRef<number | undefined>(undefined)
  const wheelResetTimer = useRef<number | undefined>(undefined)
  const frame = useRef<number | undefined>(undefined)
+ const [paused, setPaused] = useState(false)
+
+ const togglePause = useCallback(() => {
+   const video = videoRef.current
+   if (!video) return
+   if (video.paused) {
+     void video.play()
+     setPaused(false)
+   } else {
+     video.pause()
+     setPaused(true)
+   }
+ }, [])
+
+ useEffect(() => {
+   const handleKey = (event: KeyboardEvent) => {
+     if (event.key === ' ' || event.code === 'Space') {
+       event.preventDefault()
+       togglePause()
+     }
+   }
+   window.addEventListener('keydown', handleKey)
+   return () => window.removeEventListener('keydown', handleKey)
+ }, [togglePause])
 
  useEffect(() => () => {
    window.clearTimeout(transitionTimer.current)
@@ -90,13 +116,14 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
      if (!wasDragging) return
      const distance = dragDistance.current
      if (Math.abs(distance) >= SWIPE_DISTANCE) navigateOnce(distance < 0 ? 1 : -1)
-     else resetPosition()
+     else { resetPosition(); togglePause() }
    }}
    onPointerCancel={() => { pointerStartY.current = null; resetPosition() }}
  >
    <div className="video-stage__media">
      <div className="video-stage__frame">
-       <video className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+       <video ref={videoRef} className="video-stage__video" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
+       {paused && <div className="video-stage__pause-overlay"><Pause size={48}/></div>}
      </div>
    </div>
    <div className="stage-chrome">
@@ -105,13 +132,13 @@ export function VideoStage({listing,muted,enterDirection,inputLockedUntil,onMute
        <button className="glass-button" onClick={onMute} aria-label={muted?'Unmute':'Mute'}>{muted?<VolumeX/>:<Volume2/>}</button>
        <button className="glass-button stage-controls__fullscreen" onClick={onFullscreen} aria-label="Toggle fullscreen"><Maximize2/></button>
      </div>
-     <div className="seller">
+     {!detailsOpen && <div className="seller">
        <div className="seller__row">
          <div className="avatar">{listing.sellerInit}</div>
-         <div className="seller__meta"><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small>{listing.sellerCat}</small></div>
+         <div className="seller__meta"><strong>{listing.sellerName} {listing.verified?<BadgeCheck size={16}/>:null}</strong><small><MapPin size={12}/> {listing.location}</small></div>
        </div>
        <p className="seller__title">{listing.title}</p>
-     </div>
+     </div>}
    </div>
  </div>
 }

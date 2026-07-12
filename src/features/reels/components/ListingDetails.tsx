@@ -13,25 +13,28 @@ type ListingDetailsProps = {
 export function ListingDetails({ listing, expanded, favorite, onExpand, onFavorite, onShare }: ListingDetailsProps) {
   return <div className="ld">
     <div className="ld__tags"><span>{listing.sellerCat}</span><span>Used</span></div>
-    <h1 className="ld__title">{listing.title}</h1>
+
     <div className="ld__price">KD {listing.price} {listing.oldPrice ? <del>KD {listing.oldPrice}</del> : null}</div>
-    <div className="ld__urgent"><Flame/> 5+ people interested — act fast</div>
+    <h1 className="ld__title">{listing.title}</h1>
+
+    <div className="ld__urgent"><Flame /> 5+ people interested — act fast</div>
 
     <div className="ld__cta">
-      <button className="ld__chat"><MessageCircle/> Chat seller</button>
-      <button className="ld__call" aria-label="Call seller"><Phone/></button>
-    </div>
-    <div className="ld__secondary">
-      <button className={`ld-fav ${favorite ? 'is-active' : ''}`} onClick={onFavorite}><Heart fill={favorite ? 'currentColor' : 'none'}/> {favorite ? 'Saved' : 'Favorite'}</button>
-      <button className="ld-share" onClick={onShare}><Share2/> Share</button>
-      <button className="ld-offer"><Tag/> Make offer</button>
+      <button className="ld__chat"><MessageCircle /> Chat seller</button>
+      <button className="ld__call" aria-label="Call seller"><Phone /></button>
     </div>
 
-    <div className="ld__grid">
-      <div><small><MapPin/> Location</small><strong>{listing.location}</strong></div>
-      <div><small><Eye/> Views</small><strong>{listing.views}</strong></div>
-      <div><small><Clock/> Posted</small><strong>{listing.posted}</strong></div>
-      <div><small><Truck/> Delivery</small><strong>{listing.delivery ? 'Available' : 'Pickup only'}</strong></div>
+    <div className="ld__secondary">
+      <button className={`ld-fav ${favorite ? 'is-active' : ''}`} onClick={onFavorite}><Heart fill={favorite ? 'currentColor' : 'none'} /> {favorite ? 'Wishlisted' : 'Wishlist'}</button>
+      <button className="ld-share" onClick={onShare}><Share2 /> Share</button>
+      <button className="ld-offer"><Tag /> Make offer</button>
+    </div>
+
+    <div className="ld__stats">
+      <div className="ld__stat"><MapPin size={15}/><strong>{listing.location}</strong></div>
+      <div className="ld__stat"><Eye size={15}/><strong>{listing.views}</strong></div>
+      <div className="ld__stat"><Clock size={15}/><strong>{listing.posted}</strong></div>
+      <div className="ld__stat"><Truck size={15}/><strong>{listing.delivery ? 'Delivery' : 'Pickup'}</strong></div>
     </div>
 
     <h2 className="ld__label">Description</h2>
