@@ -118,7 +118,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   .view-details{bottom:20px}
   .action-rail{left:calc(100% + 14px);right:auto;bottom:24px}
   .reels-webview--details .action-rail{display:none}
-  .details-panel{display:flex;position:relative;flex:0 0 auto;width:min(440px,40vw);border-radius:24px;background:#fff;overflow:hidden;animation:panel-in .34s cubic-bezier(.22,1,.36,1) both}
+  /* overlay pinned to the right of the player card so opening details never reflows/moves the video */
+  .details-panel{display:flex;position:absolute;top:14px;right:20px;bottom:14px;z-index:20;width:min(440px,40vw);border-radius:24px;background:#fff;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5);animation:panel-in .34s cubic-bezier(.22,1,.36,1) both}
   .sheet{display:none}
   .reels-webview--details .reel-nav{display:none}
   .share{margin-bottom:24px;border-radius:16px}
