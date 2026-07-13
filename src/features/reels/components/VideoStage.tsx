@@ -123,7 +123,7 @@ export function VideoStage({listing,muted,detailsOpen,enterDirection,inputLocked
    <div className="absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
      <div className="video-stage__frame relative z-2 h-full max-w-full aspect-[9/16] overflow-hidden">
        <video ref={videoRef} className="w-full h-full block object-cover bg-black" src={listing.videoUrl} muted={muted} autoPlay loop playsInline preload="metadata" aria-label={listing.title}/>
-       {paused && <div className="absolute inset-0 grid place-items-center z-4 animate-[pause-fade-in_0.2s_ease_both] pointer-events-none [&_svg]:text-white [&_svg]:drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"><Pause size={48}/></div>}
+       {paused && <div className="absolute inset-0 grid place-items-center z-4 animate-[pause-fade-in_0.2s_ease_both] pointer-events-none [&_svg]:text-white [&_svg]:drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"><Pause size={32}/></div>}
      </div>
    </div>
    <div className="stage-chrome absolute inset-0 pointer-events-none">
