@@ -9,7 +9,8 @@ import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
-import { reelsSource } from '../features/reels/api/reelsSource'
+
+const PREFETCH_REMAINING_REELS = 3
 
 export function App() {
   const { listings, loading, error, loadMore, retry } = useReelsFeed()
@@ -29,10 +30,10 @@ export function App() {
   const { detail } = useReelDetail(detailsOpen && listing ? listing.id : null)
 
   const navigate = useCallback((direction: number) => {
+    if (!listings.length) return
     const next = (index + direction + listings.length) % listings.length
     feedRef.current?.scrollToReel(next)
-    if (direction > 0 && next >= listings.length - 2) loadMore()
-  }, [index, listings.length, loadMore])
+  }, [index, listings.length])
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -43,15 +44,6 @@ export function App() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
-
-  // Count a view once per reel when it becomes active.
-  const viewed = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    const id = listings[safeIndex]?.id
-    if (!id || viewed.current.has(id)) return
-    viewed.current.add(id)
-    void reelsSource.incrementViews(id)
-  }, [listings, safeIndex])
 
   const toggleFavorite = (id: string) => {
     const wasFavorited = favorites.has(id)
@@ -75,7 +67,8 @@ export function App() {
     setIndex(idx)
     setDetailsOpen(false)
     setDescriptionExpanded(false)
-  }, [])
+    if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
+  }, [listings.length, loadMore])
 
   // Loading / error states
   if (loading && !listings.length) {

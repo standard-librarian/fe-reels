@@ -444,7 +444,7 @@ button {
   .reel-feed {
     position: absolute;
     inset: 0;
-    overflow: hidden;
+    overflow-y: auto;
     border-radius: 24px
   }
 

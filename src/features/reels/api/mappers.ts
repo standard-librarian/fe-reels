@@ -18,9 +18,9 @@ export function initialsFrom(name: string): string {
 }
 
 /** Group thousands for display: "3200" -> "3,200". Leaves non-numeric as-is. */
-export function formatPrice(raw: string): string {
+export function formatPrice(raw: string | number): string {
   const n = Number(String(raw).replace(/[^\d.]/g, ''))
-  return Number.isFinite(n) && String(raw).trim() !== '' ? n.toLocaleString('en-US') : raw
+  return Number.isFinite(n) && String(raw).trim() !== '' ? n.toLocaleString('en-US') : String(raw)
 }
 
 /** Contract "9:16" -> CSS aspect-ratio "9 / 16". */
@@ -78,29 +78,26 @@ export function feedItemToListing(dto: FeedItemDTO): Listing {
 
 /** Full detail -> complete Listing (fetched lazily on "View details"). */
 export function detailToListing(dto: ReelDetailDTO): Listing {
-  const name = dto.user?.first_name || DEFAULT_SELLER
-  const description = dto.description || ''
-  const specs: Spec[] = (dto.extra_attributes ?? [])
-    .filter(a => a.val)
-    .map(a => ({ k: a.labels_en || '', v: a.val }))
+  const name = dto.user?.name?.trim() || DEFAULT_SELLER
+  const description = dto.description?.original || dto.description?.translated || ''
+  const title = dto.title.original || dto.title.translated || ''
+  const category = dto.categories?.[0]
+  const location = dto.district_full_path_en?.filter(Boolean).join(', ') || dto.districts?.[0]?.name_en || ''
   return {
     ...listingDefaults,
-    id: dto.user_adv_id,
-    title: dto.title,
-    price: formatPrice(dto.price),
+    id: dto.id,
+    title,
+    price: formatPrice(dto.price ?? dto.ad_asking_price ?? ''),
     sellerInit: initialsFrom(name),
     sellerName: name,
-    sellerCat: dto.category?.name || '',
+    sellerCat: category?.name_en || category?.name_ar || '',
     verified: Boolean(dto.user?.is_verified),
     videoUrl: dto.video_url || '',
-    phone: dto.phone,
-    location: dto.district?.name || '',
-    views: dto.user_view_count != null ? String(dto.user_view_count) : 'New',
+    phone: dto.contact_no || dto.user?.phone,
+    location,
+    views: 'New',
     posted: dto.date_published || 'Today',
     descShort: truncate(description),
     descFull: description,
-    specs,
-    sellerListings: dto.user?.listings_count != null ? String(dto.user.listings_count) : '',
-    sellerSince: dto.user?.member_since || '',
   }
 }

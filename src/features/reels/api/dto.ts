@@ -60,35 +60,36 @@ export type FeedResponseDTO = {
   }
 }
 
-// ----- Detail endpoint (V5 AdvertisementResource) — only the fields we use -----
+// ----- Detail endpoint (live AdvertisementResource) — only the fields we use -----
 
-export type DetailAttributeDTO = { id?: number; val: string; labels_en?: string }
+export type DetailTextDTO = {
+  original?: string
+  translated?: string
+}
 
 export type DetailUserDTO = {
   user_id: number
-  first_name: string
+  name?: string
   image?: string | null
-  member_since?: string
-  listings_count?: number
+  phone?: string
   is_verified?: boolean
 }
 
-export type DetailCategoryDTO = { cat_id?: number; name?: string; breadcrumb?: string }
-export type DetailDistrictDTO = { district_id?: number; name?: string }
+export type DetailCategoryDTO = { id: number; name_en?: string; name_ar?: string }
+export type DetailDistrictDTO = { id: number; name_en?: string; name_ar?: string }
 
 export type ReelDetailDTO = {
-  user_adv_id: string
-  title: string
-  description?: string
-  price: string
-  currency?: string
+  id: string
+  title: DetailTextDTO
+  description?: DetailTextDTO
+  price: string | number
+  ad_asking_price?: string | number
   video_url?: string
-  phone?: string
-  user_view_count?: number
+  contact_no?: string
   date_published?: string
-  extra_attributes?: DetailAttributeDTO[]
-  category?: DetailCategoryDTO
-  district?: DetailDistrictDTO
+  categories?: DetailCategoryDTO[]
+  districts?: DetailDistrictDTO[]
+  district_full_path_en?: string[]
   user?: DetailUserDTO
 }
 

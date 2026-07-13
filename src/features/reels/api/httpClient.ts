@@ -1,8 +1,9 @@
-// Thin fetch wrapper. Base URL comes from VITE_API_BASE_URL (empty = same origin,
-// which is what MSW intercepts in dev). Maps the contract's error responses to a
-// typed ApiError so callers can branch on `code` (e.g. "invalid_cursor").
+// Thin fetch wrapper. Development uses the staging API unless VITE_API_BASE_URL
+// overrides it. MSW intercepts same-origin requests when explicitly enabled.
+// Maps contract errors to a typed ApiError so callers can branch on `code`.
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+const STAGING_API_BASE_URL = 'https://staging-services.q84sale.com/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || STAGING_API_BASE_URL
 
 // TODO(auth): the contract says "authenticated user", but the auth boundary is
 // per-endpoint and still TBD — you do NOT need to be logged in to watch reels.

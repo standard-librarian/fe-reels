@@ -2,6 +2,8 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import type { Listing } from '../types'
 import { VideoStage } from './VideoStage'
 
+const PRELOAD_AHEAD = 2
+
 type ReelFeedProps = {
   listings: Listing[]
   muted: boolean
@@ -21,14 +23,17 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map())
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [videoRefVersion, setVideoRefVersion] = useState(0)
   const isScrolling = useRef(false)
   const scrollTimer = useRef<number | undefined>(undefined)
   const tapStart = useRef<{ x: number; y: number; t: number } | null>(null)
 
   // register video refs from children
   const registerVideo = useCallback((index: number, el: HTMLVideoElement | null) => {
+    const previous = videoRefs.current.get(index)
     if (el) videoRefs.current.set(index, el)
     else videoRefs.current.delete(index)
+    if (previous !== el) setVideoRefVersion(version => version + 1)
   }, [])
 
   // scroll to a specific reel
@@ -74,7 +79,7 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
         video.pause()
       }
     })
-  }, [currentIndex])
+  }, [currentIndex, videoRefVersion])
 
   // detect scroll state for tap-vs-drag distinction
   useEffect(() => {
@@ -128,8 +133,10 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
           muted={muted}
           detailsOpen={detailsOpen}
           isActive={idx === currentIndex}
+          shouldMountVideo={idx >= currentIndex && idx <= currentIndex + PRELOAD_AHEAD}
+          videoIndex={idx}
           onMute={onMute}
-          registerVideo={(el) => registerVideo(idx, el)}
+          registerVideo={registerVideo}
         />
       ))}
     </div>
