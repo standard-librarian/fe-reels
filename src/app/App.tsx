@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, Info, MessageCircle, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronUp, Heart, Info, MessageCircle, HeartPlus, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
@@ -17,6 +17,8 @@ export function App() {
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set())
   const [navigationDirection, setNavigationDirection] = useState(1)
   const [inputLockedUntil, setInputLockedUntil] = useState(0)
+  const [wishlistToast, setWishlistToast] = useState(false)
+  const toastTimer = useRef<number | undefined>(undefined)
   const listing = listings[index]
   const upcomingVideoUrls = [1, 2].map(offset => listings[(index + offset) % listings.length].videoUrl)
 
@@ -40,12 +42,23 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
 
-  const toggleFavorite = () => setFavorites(current => {
-    const next = new Set(current)
-    if (next.has(listing.id)) next.delete(listing.id)
-    else next.add(listing.id)
-    return next
-  })
+  const toggleFavorite = () => {
+    const wasFavorited = favorites.has(listing.id)
+    setFavorites(current => {
+      const next = new Set(current)
+      if (next.has(listing.id)) next.delete(listing.id)
+      else next.add(listing.id)
+      return next
+    })
+    if (!wasFavorited) {
+      setWishlistToast(true)
+      window.clearTimeout(toastTimer.current)
+      toastTimer.current = window.setTimeout(() => setWishlistToast(false), 3000)
+    } else {
+      setWishlistToast(false)
+      window.clearTimeout(toastTimer.current)
+    }
+  }
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) void document.exitFullscreen()
@@ -53,17 +66,18 @@ export function App() {
   }
 
   const actions = <>
-    <IconButton className="action--rail-mute" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)}/>
-    <IconButton icon={Heart} label={listing.favCount} active={favorites.has(listing.id)} onClick={toggleFavorite}/>
-    <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)}/>
-    <IconButton icon={MessageCircle} label="Chat"/>
-    <IconButton icon={Phone} label="Call" primary/>
+    <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
+    <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={toggleFavorite} />
+    <IconButton icon={MessageCircle} label="Chat" />
+    <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
+    <IconButton icon={Phone} label="Call" primary />
   </>
 
   const video = <VideoStage
     key={listing.id}
     listing={listing}
     muted={muted}
+    detailsOpen={detailsOpen}
     enterDirection={navigationDirection}
     inputLockedUntil={inputLockedUntil}
     onMute={() => setMuted(current => !current)}
@@ -71,31 +85,37 @@ export function App() {
     onNavigate={navigate}
   />
 
-  return <main className={`reels-webview ${detailsOpen ? 'reels-webview--details' : ''}`}>
-    <VideoPreloader urls={upcomingVideoUrls}/>
-    <section className="reels-player" aria-label="Video listings">
+
+  return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
+    <VideoPreloader urls={upcomingVideoUrls} />
+    <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center" aria-label="Video listings">
       {video}
-      <div className="stage-chrome">
-        <div className="action-rail">{actions}</div>
-        {!detailsOpen && <button className="view-details" onClick={() => setDetailsOpen(true)}>
-          <Info/> View details <span className="view-details__dot">·</span> <b>KD {listing.price}</b>
+      <div className="stage-chrome absolute inset-0 pointer-events-none">
+        <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">{actions}</div>
+        {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-[42px] flex items-center gap-2 px-[22px] border-0 rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] text-brand-text text-[13px] font-bold whitespace-nowrap transition-[transform,box-shadow] duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] active:shadow-[0_4px_14px_rgba(0,0,0,0.2)] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
+          <Info /> View details
         </button>}
       </div>
-      <nav className="reel-nav" aria-label="Reel navigation">
-        <button onClick={() => navigate(-1)} aria-label="Previous reel"><ChevronUp/></button>
-        <button onClick={() => navigate(1)} aria-label="Next reel"><ChevronDown/></button>
+      <nav className="reel-nav absolute right-3.5 top-1/2 -translate-y-1/2 z-6 hidden flex-col items-center gap-3 text-white" aria-label="Reel navigation">
+        <button className="w-[52px] h-[52px] grid place-items-center border border-white/19 rounded-full bg-black/34 backdrop-blur-[8px] text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px]" onClick={() => navigate(-1)} aria-label="Previous reel"><ChevronUp /></button>
+        <button className="w-[52px] h-[52px] grid place-items-center border border-white/19 rounded-full bg-black/34 backdrop-blur-[8px] text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px]" onClick={() => navigate(1)} aria-label="Next reel"><ChevronDown /></button>
       </nav>
-      {detailsOpen && <div className="sheet">
-        <div className="sheet__grip"/>
-        <button className="sheet__close" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown/></button>
-        <div className="sheet__scroll noscroll">
-          <ListingDetails listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={toggleFavorite} onShare={() => setShareOpen(true)}/>
+      {detailsOpen && <div className="sheet absolute left-0 right-0 bottom-0 top-[12vh] z-8 flex flex-col rounded-t-[20px] bg-white shadow-[0_-12px_34px_rgba(0,0,0,0.22)] overflow-hidden animate-[sheet-up_0.34s_cubic-bezier(0.22,1,0.36,1)_both] [&_.ld-fav]:hidden [&_.ld-share]:hidden">
+        <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
+        <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
+        <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
+          <ListingDetails listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={toggleFavorite} onShare={() => setShareOpen(true)} />
         </div>
       </div>}
     </section>
 
-    {detailsOpen ? <DetailsPanel listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={toggleFavorite}/> : null}
+    {detailsOpen ? <DetailsPanel listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={toggleFavorite} /> : null}
 
-    {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)}/> : null}
+    {wishlistToast && <div className="absolute left-1/2 top-[max(40px,calc(env(safe-area-inset-top)+8px))] z-20 flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-fav [&_svg]:fill-fav" role="status" aria-live="polite">
+      <Heart size={18} />
+      <span>Added to Wishlist</span>
+    </div>}
+
+    {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)} /> : null}
   </main>
 }
