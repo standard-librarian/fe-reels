@@ -4,9 +4,12 @@ import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
+import { ContactDialog } from '../features/reels/components/ContactDialog'
 import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
-import { listings } from '../features/reels/data/listings'
+import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
+import { useReelDetail } from '../features/reels/hooks/useReelDetail'
+import { reelsSource } from '../features/reels/api/reelsSource'
 
 export function App() {
   const { listings, loading, error, loadMore, retry } = useReelsFeed()
@@ -20,35 +23,16 @@ export function App() {
   const [wishlistToast, setWishlistToast] = useState(false)
   const toastTimer = useRef<number | undefined>(undefined)
   const feedRef = useRef<ReelFeedHandle>(null)
-  const listing = listings[index]
+
+  const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
+  const listing = listings[safeIndex]
+  const { detail } = useReelDetail(detailsOpen && listing ? listing.id : null)
 
   const navigate = useCallback((direction: number) => {
     const next = (index + direction + listings.length) % listings.length
     feedRef.current?.scrollToReel(next)
-  }, [index])
-
-  const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
-  const listing = listings[safeIndex]
-  // Lazily fetch full detail when the sheet/panel opens; show feed data meanwhile.
-  const { detail } = useReelDetail(detailsOpen && listing ? listing.id : null)
-
-  const navigate = useCallback((direction: number) => {
-    const now = performance.now()
-    if (now < inputLockedUntil) return
-    setIndex(current => {
-      const next = current + direction
-      if (next < 0 || next >= listings.length) {
-        if (direction > 0) loadMore()
-        return current
-      }
-      setInputLockedUntil(now + 550)
-      setNavigationDirection(direction)
-      setDetailsOpen(false)
-      setDescriptionExpanded(false)
-      if (direction > 0 && next >= listings.length - 2) loadMore()
-      return next
-    })
-  }, [inputLockedUntil, listings.length, loadMore])
+    if (direction > 0 && next >= listings.length - 2) loadMore()
+  }, [index, listings.length, loadMore])
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -60,7 +44,7 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
 
-  // Count a view once per reel when it becomes active (contract side-effect).
+  // Count a view once per reel when it becomes active.
   const viewed = useRef<Set<string>>(new Set())
   useEffect(() => {
     const id = listings[safeIndex]?.id
@@ -68,21 +52,6 @@ export function App() {
     viewed.current.add(id)
     void reelsSource.incrementViews(id)
   }, [listings, safeIndex])
-
-  if (loading && !listings.length) {
-    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">Loading reels…</main>
-  }
-  if (error && !listings.length) {
-    return <main className="relative w-full h-dvh flex flex-col items-center justify-center gap-3.5 bg-dark-bg text-white/70 text-sm font-semibold text-center px-6">
-      <p>Couldn't load the feed.</p>
-      <button className="px-[18px] py-2.5 rounded-full border border-white/20 bg-white/10 text-white font-bold" onClick={retry}>Try again</button>
-    </main>
-  }
-  if (!listing) {
-    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">No reels yet.</main>
-  }
-
-  const shownListing = detail ?? listing
 
   const toggleFavorite = (id: string) => {
     const wasFavorited = favorites.has(id)
@@ -108,6 +77,22 @@ export function App() {
     setDescriptionExpanded(false)
   }, [])
 
+  // Loading / error states
+  if (loading && !listings.length) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">Loading reels…</main>
+  }
+  if (error && !listings.length) {
+    return <main className="relative w-full h-dvh flex flex-col items-center justify-center gap-3.5 bg-dark-bg text-white/70 text-sm font-semibold text-center px-6">
+      <p>Couldn't load the feed.</p>
+      <button className="px-[18px] py-2.5 rounded-full border border-white/20 bg-white/10 text-white font-bold" onClick={retry}>Try again</button>
+    </main>
+  }
+  if (!listing) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">No reels yet.</main>
+  }
+
+  const shownListing = detail ?? listing
+
   return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
       <ReelFeed
@@ -121,10 +106,10 @@ export function App() {
       <div className="stage-chrome absolute inset-0 pointer-events-none">
         <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
           <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
-          <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={toggleFavorite} />
-          <IconButton icon={MessageCircle} label="Chat" />
+          <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={() => toggleFavorite(listing.id)} />
+          <IconButton icon={MessageCircle} label="Chat" onClick={() => setContact('whatsapp')} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-          <IconButton icon={Phone} label="Call" primary />
+          <IconButton icon={Phone} label="Call" primary onClick={() => setContact('call')} />
         </div>
         {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-[42px] flex items-center gap-2 px-[22px] border-0 rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] text-brand-text text-[13px] font-bold whitespace-nowrap transition-[transform,box-shadow] duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] active:shadow-[0_4px_14px_rgba(0,0,0,0.2)] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
           <Info /> View details
@@ -133,7 +118,7 @@ export function App() {
           <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
           <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
           <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
-            <ListingDetails listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={toggleFavorite} onShare={() => setShareOpen(true)} />
+            <ListingDetails listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={() => toggleFavorite(listing.id)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} />
           </div>
         </div>}
       </div>
