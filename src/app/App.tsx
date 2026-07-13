@@ -6,9 +6,12 @@ import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { VideoStage } from '../features/reels/components/VideoStage'
 import { VideoPreloader } from '../features/reels/components/VideoPreloader'
-import { listings } from '../features/reels/data/listings'
+import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
+import { useReelDetail } from '../features/reels/hooks/useReelDetail'
+import { reelsSource } from '../features/reels/api/reelsSource'
 
 export function App() {
+  const { listings, loading, error, loadMore, retry } = useReelsFeed()
   const [index, setIndex] = useState(0)
   const [muted, setMuted] = useState(true)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -19,18 +22,29 @@ export function App() {
   const [inputLockedUntil, setInputLockedUntil] = useState(0)
   const [wishlistToast, setWishlistToast] = useState(false)
   const toastTimer = useRef<number | undefined>(undefined)
-  const listing = listings[index]
-  const upcomingVideoUrls = [1, 2].map(offset => listings[(index + offset) % listings.length].videoUrl)
+
+  const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
+  const listing = listings[safeIndex]
+  // Lazily fetch full detail when the sheet/panel opens; show feed data meanwhile.
+  const { detail } = useReelDetail(detailsOpen && listing ? listing.id : null)
 
   const navigate = useCallback((direction: number) => {
     const now = performance.now()
     if (now < inputLockedUntil) return
-    setInputLockedUntil(now + 550)
-    setNavigationDirection(direction)
-    setIndex(current => (current + direction + listings.length) % listings.length)
-    setDetailsOpen(false)
-    setDescriptionExpanded(false)
-  }, [inputLockedUntil])
+    setIndex(current => {
+      const next = current + direction
+      if (next < 0 || next >= listings.length) {
+        if (direction > 0) loadMore()
+        return current
+      }
+      setInputLockedUntil(now + 550)
+      setNavigationDirection(direction)
+      setDetailsOpen(false)
+      setDescriptionExpanded(false)
+      if (direction > 0 && next >= listings.length - 2) loadMore()
+      return next
+    })
+  }, [inputLockedUntil, listings.length, loadMore])
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -42,12 +56,36 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
 
-  const toggleFavorite = () => {
-    const wasFavorited = favorites.has(listing.id)
+  // Count a view once per reel when it becomes active (contract side-effect).
+  const viewed = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    const id = listings[safeIndex]?.id
+    if (!id || viewed.current.has(id)) return
+    viewed.current.add(id)
+    void reelsSource.incrementViews(id)
+  }, [listings, safeIndex])
+
+  if (loading && !listings.length) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">Loading reels…</main>
+  }
+  if (error && !listings.length) {
+    return <main className="relative w-full h-dvh flex flex-col items-center justify-center gap-3.5 bg-dark-bg text-white/70 text-sm font-semibold text-center px-6">
+      <p>Couldn't load the feed.</p>
+      <button className="px-[18px] py-2.5 rounded-full border border-white/20 bg-white/10 text-white font-bold" onClick={retry}>Try again</button>
+    </main>
+  }
+  if (!listing) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">No reels yet.</main>
+  }
+
+  const shownListing = detail ?? listing
+
+  const toggleFavorite = (id: string) => {
+    const wasFavorited = favorites.has(id)
     setFavorites(current => {
       const next = new Set(current)
-      if (next.has(listing.id)) next.delete(listing.id)
-      else next.add(listing.id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
     if (!wasFavorited) {
@@ -65,9 +103,13 @@ export function App() {
     else void document.documentElement.requestFullscreen?.()
   }
 
+  const upcomingVideoUrls = [1, 2]
+    .map(offset => listings[safeIndex + offset]?.videoUrl)
+    .filter((url): url is string => Boolean(url))
+
   const actions = <>
     <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
-    <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={toggleFavorite} />
+    <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={() => toggleFavorite(listing.id)} />
     <IconButton icon={MessageCircle} label="Chat" />
     <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
     <IconButton icon={Phone} label="Call" primary />
@@ -104,12 +146,12 @@ export function App() {
         <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
         <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
         <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
-          <ListingDetails listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={toggleFavorite} onShare={() => setShareOpen(true)} />
+          <ListingDetails listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={() => toggleFavorite(listing.id)} onShare={() => setShareOpen(true)} />
         </div>
       </div>}
     </section>
 
-    {detailsOpen ? <DetailsPanel listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={toggleFavorite} /> : null}
+    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={() => toggleFavorite(listing.id)} /> : null}
 
     {wishlistToast && <div className="absolute left-1/2 top-[max(40px,calc(env(safe-area-inset-top)+8px))] z-20 flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-fav [&_svg]:fill-fav" role="status" aria-live="polite">
       <Heart size={18} />
