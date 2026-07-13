@@ -34,3 +34,6 @@ skills-lock.json
 Thumbs.db
 
 CLAUDE.md
+
+k8s-stg.yaml
+k8s.yaml
