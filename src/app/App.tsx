@@ -9,10 +9,12 @@ import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { listings } from '../features/reels/data/listings'
 
 export function App() {
+  const { listings, loading, error, loadMore, retry } = useReelsFeed()
   const [index, setIndex] = useState(0)
   const [muted, setMuted] = useState(true)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [contact, setContact] = useState<'whatsapp' | 'call' | null>(null)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set())
   const [wishlistToast, setWishlistToast] = useState(false)
@@ -25,6 +27,29 @@ export function App() {
     feedRef.current?.scrollToReel(next)
   }, [index])
 
+  const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
+  const listing = listings[safeIndex]
+  // Lazily fetch full detail when the sheet/panel opens; show feed data meanwhile.
+  const { detail } = useReelDetail(detailsOpen && listing ? listing.id : null)
+
+  const navigate = useCallback((direction: number) => {
+    const now = performance.now()
+    if (now < inputLockedUntil) return
+    setIndex(current => {
+      const next = current + direction
+      if (next < 0 || next >= listings.length) {
+        if (direction > 0) loadMore()
+        return current
+      }
+      setInputLockedUntil(now + 550)
+      setNavigationDirection(direction)
+      setDetailsOpen(false)
+      setDescriptionExpanded(false)
+      if (direction > 0 && next >= listings.length - 2) loadMore()
+      return next
+    })
+  }, [inputLockedUntil, listings.length, loadMore])
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowRight') navigate(1)
@@ -35,12 +60,36 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
 
-  const toggleFavorite = () => {
-    const wasFavorited = favorites.has(listing.id)
+  // Count a view once per reel when it becomes active (contract side-effect).
+  const viewed = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    const id = listings[safeIndex]?.id
+    if (!id || viewed.current.has(id)) return
+    viewed.current.add(id)
+    void reelsSource.incrementViews(id)
+  }, [listings, safeIndex])
+
+  if (loading && !listings.length) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">Loading reels…</main>
+  }
+  if (error && !listings.length) {
+    return <main className="relative w-full h-dvh flex flex-col items-center justify-center gap-3.5 bg-dark-bg text-white/70 text-sm font-semibold text-center px-6">
+      <p>Couldn't load the feed.</p>
+      <button className="px-[18px] py-2.5 rounded-full border border-white/20 bg-white/10 text-white font-bold" onClick={retry}>Try again</button>
+    </main>
+  }
+  if (!listing) {
+    return <main className="relative w-full h-dvh grid place-items-center bg-dark-bg text-white/70 text-sm font-semibold">No reels yet.</main>
+  }
+
+  const shownListing = detail ?? listing
+
+  const toggleFavorite = (id: string) => {
+    const wasFavorited = favorites.has(id)
     setFavorites(current => {
       const next = new Set(current)
-      if (next.has(listing.id)) next.delete(listing.id)
-      else next.add(listing.id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
     if (!wasFavorited) {
@@ -94,7 +143,7 @@ export function App() {
       </nav>
     </section>
 
-    {detailsOpen ? <DetailsPanel listing={listing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={toggleFavorite} /> : null}
+    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} onFavorite={() => toggleFavorite(listing.id)} /> : null}
 
     {wishlistToast && <div className="absolute left-1/2 top-[max(40px,calc(env(safe-area-inset-top)+8px))] z-20 flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-fav [&_svg]:fill-fav" role="status" aria-live="polite">
       <Heart size={18} />
@@ -102,5 +151,7 @@ export function App() {
     </div>}
 
     {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)} /> : null}
+
+    {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} onClose={() => setContact(null)} /> : null}
   </main>
 }

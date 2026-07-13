@@ -7,10 +7,12 @@ type ListingDetailsProps = {
   favorite: boolean
   onExpand: () => void
   onFavorite: () => void
+  onChat: () => void
+  onCall: () => void
   onShare: () => void
 }
 
-export function ListingDetails({ listing, expanded, favorite, onExpand, onFavorite, onShare }: ListingDetailsProps) {
+export function ListingDetails({ listing, expanded, favorite, onExpand, onFavorite, onChat, onCall, onShare }: ListingDetailsProps) {
   return <div className="flex flex-col">
     <div className="flex flex-wrap gap-1.5 mb-4">{['sellerCat' as const, 'used' as const].map((key, i) => <span key={i} className="px-3 py-[5px] rounded-full bg-brand-section text-brand-muted text-[11px] font-semibold">{key === 'used' ? 'Used' : listing.sellerCat}</span>)}</div>
 
@@ -20,8 +22,8 @@ export function ListingDetails({ listing, expanded, favorite, onExpand, onFavori
     <div className="flex items-center gap-1.5 m-0 mb-4 py-2.5 px-3.5 rounded-[10px] border-l-[3px] border-l-urgent bg-[#fff5f0] text-urgent text-xs font-bold [&_svg]:w-4 [&_svg]:shrink-0"><Flame /> 5+ people interested — act fast</div>
 
     <div className="flex gap-2.5 mb-2.5">
-      <button className="flex-1 h-12 flex items-center justify-center gap-2 border-0 rounded-xl bg-brand-primary text-white font-bold text-sm [&_svg]:w-[18px]"><MessageCircle /> Chat seller</button>
-      <button className="w-12 h-12 grid place-items-center border-[1.5px] border-brand-primary rounded-xl bg-transparent text-brand-primary [&_svg]:w-5" aria-label="Call seller"><Phone /></button>
+      <button className="flex-1 h-12 flex items-center justify-center gap-2 border-0 rounded-xl bg-brand-primary text-white font-bold text-sm [&_svg]:w-[18px]" onClick={onChat}><MessageCircle /> Chat seller</button>
+      <button className="w-12 h-12 grid place-items-center border-[1.5px] border-brand-primary rounded-xl bg-transparent text-brand-primary [&_svg]:w-5" aria-label="Call seller" onClick={onCall}><Phone /></button>
     </div>
 
     <div className="flex gap-2 mb-5">
