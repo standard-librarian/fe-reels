@@ -17,6 +17,7 @@
 @utility noscroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -90,11 +91,24 @@ button {
 /* base styles for reels-webview, reels-player, and stage-chrome are in Tailwind utilities */
 /* media query overrides remain below in @media blocks */
 
-/* ===== video (9:16) ===== */
-/* base styles moved to Tailwind utilities in VideoStage.tsx */
-.video-stage {
+/* ===== reel feed (scroll container) ===== */
+.reel-feed {
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none
+}
+
+.reel-feed::-webkit-scrollbar {
+  display: none
+}
+
+.reel-item {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   -webkit-user-select: none;
-  will-change: transform, opacity
+  user-select: none
 }
 
 /* video-stage__frame and stage-gradient keep class names for media query overrides only */
@@ -323,43 +337,6 @@ button {
 }
 
 /* ===== transitions ===== */
-.video-stage--enter-up {
-  animation: reel-enter-up .28s cubic-bezier(.22, 1, .36, 1) both
-}
-
-.video-stage--enter-down {
-  animation: reel-enter-down .28s cubic-bezier(.22, 1, .36, 1) both
-}
-
-.video-stage--leaving,
-.video-stage--snapping {
-  transition: transform .24s cubic-bezier(.22, 1, .36, 1), opacity .2s ease
-}
-
-@keyframes reel-enter-up {
-  from {
-    transform: translate3d(0, 32%, 0);
-    opacity: 0
-  }
-
-  to {
-    transform: translate3d(0, 0, 0);
-    opacity: 1
-  }
-}
-
-@keyframes reel-enter-down {
-  from {
-    transform: translate3d(0, -32%, 0);
-    opacity: 0
-  }
-
-  to {
-    transform: translate3d(0, 0, 0);
-    opacity: 1
-  }
-}
-
 @keyframes sheet-up {
   from {
     transform: translate3d(0, 28px, 0);
@@ -464,6 +441,17 @@ button {
     border-radius: 24px
   }
 
+  .reel-feed {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 24px
+  }
+
+  .reel-item {
+    height: 100%
+  }
+
   .seller {
     right: 14px
   }
@@ -485,7 +473,7 @@ button {
   }
 
   .view-details {
-    bottom: 20px
+    bottom: 34px
   }
 
   .action-rail {
@@ -530,13 +518,11 @@ button {
 
 @media(prefers-reduced-motion:reduce) {
 
-  .video-stage,
   .sheet,
   .modal,
   .share,
   .action__circle,
   .details-panel,
-  .video-stage__pause-overlay,
   .wishlist-toast {
     animation: none !important;
     transition-duration: .01ms !important

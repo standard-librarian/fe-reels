@@ -31,10 +31,10 @@ export function ListingDetails({ listing, expanded, favorite, onExpand, onFavori
     </div>
 
     <div className="flex gap-0 mb-5 border border-brand-bg rounded-xl overflow-hidden">
-      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><MapPin size={15}/><strong className="text-xs font-bold text-center leading-[1.2]">{listing.location}</strong></div>
-      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Eye size={15}/><strong className="text-xs font-bold text-center leading-[1.2]">{listing.views}</strong></div>
-      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Clock size={15}/><strong className="text-xs font-bold text-center leading-[1.2]">{listing.posted}</strong></div>
-      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Truck size={15}/><strong className="text-xs font-bold text-center leading-[1.2]">{listing.delivery ? 'Delivery' : 'Pickup'}</strong></div>
+      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><MapPin size={15} /><strong className="text-xs font-bold text-center leading-[1.2]">{listing.location}</strong></div>
+      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Eye size={15} /><strong className="text-xs font-bold text-center leading-[1.2]">{listing.views}</strong></div>
+      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Clock size={15} /><strong className="text-xs font-bold text-center leading-[1.2]">{listing.posted}</strong></div>
+      <div className="flex-1 flex flex-col items-center gap-1 py-3 px-2 bg-white not-last:border-r not-last:border-r-brand-bg [&_svg]:text-brand-muted"><Truck size={15} /><strong className="text-xs font-bold text-center leading-[1.2]">{listing.delivery ? 'Delivery' : 'Pickup'}</strong></div>
     </div>
 
     <h2 className="m-0 mb-2 text-[11px] font-bold tracking-[0.06em] uppercase text-brand-muted">Description</h2>
