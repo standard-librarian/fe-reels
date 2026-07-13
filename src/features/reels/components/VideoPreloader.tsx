@@ -33,11 +33,11 @@ function PreloadVideo({ src }: { src: string }) {
     }
   }, [src])
 
-  return <video ref={videoRef} className="video-preload" src={src} preload="auto" muted playsInline aria-hidden="true" tabIndex={-1}/>
+  return <video ref={videoRef} className="w-px h-px" src={src} preload="auto" muted playsInline aria-hidden="true" tabIndex={-1}/>
 }
 
 export function VideoPreloader({ urls }: { urls: string[] }) {
-  return <div className="video-preload-pool" aria-hidden="true">
+  return <div className="fixed -left-0.5 -bottom-0.5 w-px h-px overflow-hidden opacity-0 pointer-events-none" aria-hidden="true">
     {urls.map(url => <PreloadVideo key={url} src={url}/>)}
   </div>
 }
