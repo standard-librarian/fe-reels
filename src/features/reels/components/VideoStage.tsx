@@ -7,33 +7,25 @@ type VideoStageProps = {
   muted: boolean
   detailsOpen: boolean
   isActive: boolean
+  shouldMountVideo: boolean
+  videoIndex: number
   onMute: () => void
-  registerVideo: (el: HTMLVideoElement | null) => void
+  registerVideo: (index: number, el: HTMLVideoElement | null) => void
 }
 
-export function VideoStage({ listing, muted, detailsOpen, isActive, onMute, registerVideo }: VideoStageProps) {
+export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountVideo, videoIndex, onMute, registerVideo }: VideoStageProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [paused, setPaused] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
-  // expose video ref to parent
+  // Only active and imminent reels receive video elements. This limits decoder
+  // and bandwidth pressure while still warming the next two reels.
   useEffect(() => {
-    registerVideo(videoRef.current)
-    return () => registerVideo(null)
-  }, [registerVideo])
-
-  // sync paused state with actual video element
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    const sync = () => setPaused(video.paused)
-    video.addEventListener('play', sync)
-    video.addEventListener('pause', sync)
-    sync()
-    return () => {
-      video.removeEventListener('play', sync)
-      video.removeEventListener('pause', sync)
-    }
-  }, [])
+    if (!shouldMountVideo) return
+    registerVideo(videoIndex, videoRef.current)
+    return () => registerVideo(videoIndex, null)
+  }, [registerVideo, shouldMountVideo, videoIndex])
 
   // toggle pause on tap (called by parent via video ref)
   const togglePause = useCallback(() => {
@@ -60,18 +52,32 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, onMute, regi
     <div className="reel-item relative w-full h-dvh overflow-hidden bg-dark-bg grid place-items-center snap-start snap-always">
       <div className="absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
         <div className="video-stage__frame relative z-2 h-full max-w-full aspect-[9/16] overflow-hidden">
-          <video
+          {shouldMountVideo ? <video
             ref={videoRef}
             className="w-full h-full block object-cover bg-black"
             src={listing.videoUrl}
             muted={muted}
-            autoPlay
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             aria-label={listing.title}
-          />
-          {paused && isActive && (
+            onLoadStart={() => {
+              setPaused(false)
+              setReady(false)
+              setHasError(false)
+            }}
+            onLoadedData={() => setReady(true)}
+            onPlay={() => setPaused(false)}
+            onPause={() => setPaused(true)}
+            onError={() => setHasError(true)}
+          /> : null}
+          {isActive && !ready && !hasError ? (
+            <div className="absolute inset-0 grid place-items-center z-4 bg-black/20 text-white/75 text-xs font-semibold pointer-events-none">Loading video…</div>
+          ) : null}
+          {isActive && hasError ? (
+            <div className="absolute inset-0 grid place-items-center z-4 bg-black/70 text-white/80 text-sm font-semibold text-center px-6 pointer-events-none">This video is unavailable.</div>
+          ) : null}
+          {paused && ready && isActive && !hasError && (
             <div className="absolute inset-0 grid place-items-center z-4 animate-[pause-fade-in_0.2s_ease_both] pointer-events-none [&_svg]:text-white [&_svg]:drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
               <Pause size={32} />
             </div>
