@@ -17,8 +17,8 @@ const decodeCursor = (cursor: string | null): number => {
 }
 
 export const handlers = [
-  // GET /v1/reels/feed?cursor&limit — cursor-paginated feed
-  http.get('*/v1/reels/feed', async ({ request }) => {
+  // GET /api/v1/reels/feed?cursor&limit — cursor-paginated feed
+  http.get('*/api/v1/reels/feed', async ({ request }) => {
     await delay(300)
     const url = new URL(request.url)
     const limit = Math.max(1, Number(url.searchParams.get('limit') ?? 10))
@@ -41,8 +41,8 @@ export const handlers = [
     })
   }),
 
-  // GET /v1/reels/feed/:id — full detail
-  http.get('*/v1/reels/feed/:id', async ({ params }) => {
+  // GET /api/v1/reels/feed/:id — full detail
+  http.get('*/api/v1/reels/feed/:id', async ({ params }) => {
     await delay(200)
     const detail = detailsById[String(params.id)]
     if (!detail) return HttpResponse.json({ error: 'not_found' }, { status: 404 })

@@ -11,6 +11,8 @@ import type { Listing } from '../types'
 export type FeedParams = { cursor?: string | null; limit?: number }
 export type FeedPage = { listings: Listing[]; nextCursor: string | null; hasMore: boolean }
 
+const REELS_API_PATH = '/api/v1/reels'
+
 export interface ReelsSource {
   getFeed(params?: FeedParams): Promise<FeedPage>
   getListingDetail(id: string): Promise<Listing>
@@ -19,7 +21,7 @@ export interface ReelsSource {
 
 export class HttpReelsSource implements ReelsSource {
   async getFeed({ cursor, limit = 10 }: FeedParams = {}): Promise<FeedPage> {
-    const res = await apiGet<FeedResponseDTO>('/v1/reels/feed', { cursor, limit })
+    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit })
     return {
       listings: res.data.items.map(feedItemToListing),
       nextCursor: res.data.paging.next_cursor,
@@ -30,7 +32,7 @@ export class HttpReelsSource implements ReelsSource {
   async getListingDetail(id: string): Promise<Listing> {
     // TODO(contract): confirm the detail response is wrapped in `{ data }` like
     // the feed (the contract only documents the envelope for the feed endpoint).
-    const res = await apiGet<DetailResponseDTO>(`/v1/reels/feed/${id}`)
+    const res = await apiGet<DetailResponseDTO>(`${REELS_API_PATH}/feed/${id}`)
     return detailToListing(res.data)
   }
 
