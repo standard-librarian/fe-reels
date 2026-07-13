@@ -4,6 +4,7 @@ import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
+import { ContactDialog } from '../features/reels/components/ContactDialog'
 import { VideoStage } from '../features/reels/components/VideoStage'
 import { VideoPreloader } from '../features/reels/components/VideoPreloader'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
@@ -16,6 +17,7 @@ export function App() {
   const [muted, setMuted] = useState(true)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [contact, setContact] = useState<'whatsapp' | 'call' | null>(null)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set())
   const [navigationDirection, setNavigationDirection] = useState(1)
@@ -110,9 +112,9 @@ export function App() {
   const actions = <>
     <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
     <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={() => toggleFavorite(listing.id)} />
-    <IconButton icon={MessageCircle} label="Chat" />
+    <IconButton icon={MessageCircle} label="Chat" onClick={() => setContact('whatsapp')} />
     <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-    <IconButton icon={Phone} label="Call" primary />
+    <IconButton icon={Phone} label="Call" primary onClick={() => setContact('call')} />
   </>
 
   const video = <VideoStage
@@ -146,12 +148,12 @@ export function App() {
         <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
         <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
         <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
-          <ListingDetails listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={() => toggleFavorite(listing.id)} onShare={() => setShareOpen(true)} />
+          <ListingDetails listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onFavorite={() => toggleFavorite(listing.id)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} />
         </div>
       </div>}
     </section>
 
-    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onShare={() => setShareOpen(true)} onFavorite={() => toggleFavorite(listing.id)} /> : null}
+    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} favorite={favorites.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} onFavorite={() => toggleFavorite(listing.id)} /> : null}
 
     {wishlistToast && <div className="absolute left-1/2 top-[max(40px,calc(env(safe-area-inset-top)+8px))] z-20 flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-fav [&_svg]:fill-fav" role="status" aria-live="polite">
       <Heart size={18} />
@@ -159,5 +161,7 @@ export function App() {
     </div>}
 
     {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)} /> : null}
+
+    {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} onClose={() => setContact(null)} /> : null}
   </main>
 }
