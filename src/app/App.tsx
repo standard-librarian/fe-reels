@@ -9,7 +9,6 @@ import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
-import { reelsSource } from '../features/reels/api/reelsSource'
 
 export function App() {
   const { listings, loading, error, loadMore, retry } = useReelsFeed()
@@ -43,15 +42,6 @@ export function App() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [navigate])
-
-  // Count a view once per reel when it becomes active.
-  const viewed = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    const id = listings[safeIndex]?.id
-    if (!id || viewed.current.has(id)) return
-    viewed.current.add(id)
-    void reelsSource.incrementViews(id)
-  }, [listings, safeIndex])
 
   const toggleFavorite = (id: string) => {
     const wasFavorited = favorites.has(id)
