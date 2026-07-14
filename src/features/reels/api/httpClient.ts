@@ -1,9 +1,10 @@
-// Thin fetch wrapper. Development uses the staging API unless VITE_API_BASE_URL
-// overrides it. MSW intercepts same-origin requests when explicitly enabled.
-// Maps contract errors to a typed ApiError so callers can branch on `code`.
+// Thin fetch wrapper around the Reels API. Maps contract errors to a typed
+// ApiError so callers can branch on `code`.
 
-const STAGING_API_BASE_URL = 'https://staging-services.q84sale.com/api'
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || STAGING_API_BASE_URL
+// The origin only — endpoint paths carry their own `/api` prefix. Empty means
+// same-origin, which is what production builds rely on, so this must stay `??`:
+// `||` would discard a deliberate empty value.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 // TODO(auth): the contract says "authenticated user", but the auth boundary is
 // per-endpoint and still TBD — you do NOT need to be logged in to watch reels.
