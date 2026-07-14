@@ -59,7 +59,7 @@ export function App() {
     if (!wasFavorited) {
       setWishlistToast(true)
       window.clearTimeout(toastTimer.current)
-      toastTimer.current = window.setTimeout(() => setWishlistToast(false), 3000)
+      toastTimer.current = window.setTimeout(() => setWishlistToast(false), 1200)
     } else {
       setWishlistToast(false)
       window.clearTimeout(toastTimer.current)
