@@ -9,6 +9,7 @@ import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
+import { formatCount } from '../features/reels/api/mappers'
 
 const PREFETCH_REMAINING_REELS = 3
 
@@ -24,6 +25,7 @@ export function App() {
   const [wishlistToast, setWishlistToast] = useState(false)
   const toastTimer = useRef<number | undefined>(undefined)
   const feedRef = useRef<ReelFeedHandle>(null)
+  const justFavorited = useRef<string | null>(null)
 
   const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
   const listing = listings[safeIndex]
@@ -47,6 +49,7 @@ export function App() {
 
   const toggleFavorite = (id: string) => {
     const wasFavorited = favorites.has(id)
+    justFavorited.current = wasFavorited ? null : id
     setFavorites(current => {
       const next = new Set(current)
       if (next.has(id)) next.delete(id)
@@ -67,6 +70,7 @@ export function App() {
     setIndex(idx)
     setDetailsOpen(false)
     setDescriptionExpanded(false)
+    justFavorited.current = null
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
   }, [listings.length, loadMore])
 
@@ -99,7 +103,7 @@ export function App() {
       <div className="stage-chrome absolute inset-0 pointer-events-none">
         <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
           <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
-          <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={favorites.has(listing.id)} onClick={() => toggleFavorite(listing.id)} />
+          <IconButton icon={favorites.has(listing.id) ? Heart : HeartPlus} label={(Number(listing.favCount) || 0) >= 10 ? formatCount(Number(listing.favCount) || 0) : 'Wishlist'} active={favorites.has(listing.id)} animate={justFavorited.current === listing.id} onClick={() => toggleFavorite(listing.id)} />
           <IconButton icon={MessageCircle} label="Chat" onClick={() => setContact('whatsapp')} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           <IconButton icon={Phone} label="Call" primary onClick={() => setContact('call')} />
