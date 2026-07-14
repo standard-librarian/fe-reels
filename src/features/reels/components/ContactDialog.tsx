@@ -20,14 +20,14 @@ export function ContactDialog({ variant, phone, onClose }: ContactDialogProps) {
     <div className="fixed inset-0 z-100 flex items-end justify-center bg-[#060a1680] backdrop-blur-[3px] animate-[fade-in_0.2s_ease_both]" onClick={onClose}>
       <div className="w-full max-w-[440px] px-[22px] pt-[22px] pb-[max(30px,env(safe-area-inset-bottom))] rounded-t-xl bg-white animate-[sheet-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]" onClick={e => e.stopPropagation()}>
         <header className="flex items-center justify-between pb-4 border-b border-brand-divider">
-          <h2 className="text-[19px] font-extrabold text-brand-navy">{isWa ? 'Whatsapp' : 'Call Now'}</h2>
+          <h2 className="text-[18px] font-bold text-brand-navy">{isWa ? 'Whatsapp' : 'Call Now'}</h2>
           <button className="w-[34px] h-[34px] grid place-items-center border-0 rounded-full bg-brand-section text-brand-text" onClick={onClose} aria-label="Close"><X /></button>
         </header>
         <a className="flex items-center gap-3.5 pt-5 no-underline" href={href} target={isWa ? '_blank' : undefined} rel="noreferrer">
           <span className={`w-12 h-12 shrink-0 grid place-items-center rounded-full ${isWa ? 'bg-[#e7f8ee] text-[#1faa53]' : 'bg-[#e7edff] text-brand-primary'}`}>
             {isWa ? <WhatsappGlyph /> : <Phone />}
           </span>
-          <span className="text-lg font-extrabold text-brand-text">{phone}</span>
+          <span className="text-lg font-bold text-brand-text">{phone}</span>
         </a>
       </div>
     </div>

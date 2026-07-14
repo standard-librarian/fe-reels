@@ -93,14 +93,14 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
         {!detailsOpen && (
           <div className="seller absolute left-3.5 right-[84px] bottom-[max(74px,calc(env(safe-area-inset-bottom)+66px))] z-5 flex flex-col gap-2 text-white">
             <div className="flex items-center gap-2.5">
-              <div className="w-[38px] h-[38px] grid place-items-center shrink-0 border border-white/25 rounded-xl bg-white/16 backdrop-blur-[8px] text-white font-extrabold">{listing.sellerInit}</div>
+              <div className="w-[38px] h-[38px] grid place-items-center shrink-0 border border-white/25 rounded-xl bg-white/16 backdrop-blur-[8px] text-white font-bold">{listing.sellerInit}</div>
               <div className="min-w-0 flex-1">
                 <strong className="flex items-center gap-[5px] text-sm font-bold [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{listing.sellerName} {listing.verified ? <BadgeCheck size={16} /> : null}</strong>
                 <small className="flex items-center gap-[5px] mt-0.5 text-[11px] text-white/78 [text-shadow:0_1px_4px_rgba(0,0,0,0.4)]"><MapPin size={12} /> {listing.location}</small>
               </div>
             </div>
             <p className="m-0 text-sm font-semibold leading-[1.35] [text-shadow:0_1px_6px_rgba(0,0,0,0.5)] line-clamp-2">{listing.title}</p>
-            <p className="mt-1 mb-0 text-lg font-extrabold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.5)]">KD {listing.price}</p>
+            <p className="mt-1 mb-0 text-lg font-bold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.5)]">KD {listing.price}</p>
           </div>
         )}
       </div>
