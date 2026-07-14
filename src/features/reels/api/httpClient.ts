@@ -1,13 +1,22 @@
-// Thin fetch wrapper. Development uses the staging API unless VITE_API_BASE_URL
-// overrides it. MSW intercepts same-origin requests when explicitly enabled.
-// Maps contract errors to a typed ApiError so callers can branch on `code`.
+// Thin fetch wrapper around the Reels API. Maps contract errors to a typed
+// ApiError so callers can branch on `code`.
 
-// Endpoint paths already carry their own `/api` prefix, so the base is the bare origin.
-const STAGING_API_BASE_URL = 'https://staging-services.q84sale.com'
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || STAGING_API_BASE_URL
-
-
-
+// The API origin and nothing more — endpoint paths carry their own `/api` prefix,
+// so a trailing path here yields `/api/api/...`. The deploy workflow supplies this
+// per environment at build time, so shipping to a new environment is a config
+// change, never a code change.
+//
+// Empty means same-origin, and that is a deliberate value — hence `??` and not
+// `||`. No hardcoded host fallback on purpose: with `|| STAGING`, a production
+// build resolved to the staging API and looked like it was working while serving
+// staging data.
+//
+// TODO(infra): no production reels API exists yet — staging-services is the only
+// host serving /api/v1/reels. `main` builds with an empty base (the app's own
+// origin), but nothing here proxies /api: the image is a bare nginx serving static
+// files. Confirm the ingress routes /api to the backend, or set a production host
+// in the workflow, before this ships to prod.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export class ApiError extends Error {
   constructor(
