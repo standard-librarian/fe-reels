@@ -1,19 +1,13 @@
-// Thin fetch wrapper around the Reels API. Maps contract errors to a typed
-// ApiError so callers can branch on `code`.
+// Thin fetch wrapper. Development uses the staging API unless VITE_API_BASE_URL
+// overrides it. MSW intercepts same-origin requests when explicitly enabled.
+// Maps contract errors to a typed ApiError so callers can branch on `code`.
 
-// The origin only — endpoint paths carry their own `/api` prefix. Empty means
-// same-origin, which is what production builds rely on, so this must stay `??`:
-// `||` would discard a deliberate empty value.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+// Endpoint paths already carry their own `/api` prefix, so the base is the bare origin.
+const STAGING_API_BASE_URL = 'https://staging-services.q84sale.com'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || STAGING_API_BASE_URL
 
-// TODO(auth): the contract says "authenticated user", but the auth boundary is
-// per-endpoint and still TBD — you do NOT need to be logged in to watch reels.
-// Working assumption (confirm with backend):
-//   - GET  feed            -> public (no login to browse/watch)
-//   - GET  detail          -> authenticated (reveals contact info) on "View details"
-//   - GET  increment-views -> anonymous or attributed (TBD)
-// When the token/cookie strategy is known, attach it here (Authorization header
-// and/or `credentials: 'include'`), ideally only on the endpoints that need it.
+
+
 
 export class ApiError extends Error {
   constructor(

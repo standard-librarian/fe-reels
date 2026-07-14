@@ -37,7 +37,7 @@ function truncate(text: string, max = 130): string {
 // Fields the contract doesn't provide — sensible defaults so Listing stays valid.
 const listingDefaults = {
   negotiable: false,
-  favCount: '0',
+  wishlistCount: '0',
   condition: '',
   delivery: false,
   aspectLabel: '9:16 · VIDEO',
@@ -71,8 +71,7 @@ export function feedItemToListing(dto: FeedItemDTO): Listing {
     location: dto.district || '',
     views: dto.stats?.views != null ? String(dto.stats.views) : 'New',
     posted: dto.posted_label || 'Today',
-    // TODO(contract): backend exposes only is_wishlist (bool) today, no count.
-    favCount: dto.stats?.wishlist_count != null ? String(dto.stats.wishlist_count) : '0',
+    wishlistCount: dto.stats?.fav_count != null ? String(dto.stats.fav_count) : '0',
   }
 }
 

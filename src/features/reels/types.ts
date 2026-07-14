@@ -2,7 +2,7 @@ export type Spec = { k: string; v: string }
 export type Listing = {
   id: string; sellerInit: string; sellerName: string; sellerCat: string; verified: boolean
   title: string; price: string; oldPrice?: string; discount?: string; negotiable: boolean
-  location: string; condition: string; views: string; posted: string; favCount: string
+  location: string; condition: string; views: string; posted: string; wishlistCount: string
   delivery: boolean; warranty?: string; aspectLabel: string; aspectRatio: string
   videoUrl: string
   // TODO(contract): public seller phone for Chat/Call. Confirm whether it ships

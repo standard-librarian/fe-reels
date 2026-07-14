@@ -59,7 +59,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
             muted={muted}
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-label={listing.title}
             onLoadStart={() => {
               setPaused(false)
