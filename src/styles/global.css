@@ -8,7 +8,7 @@
   --color-brand-bg: #f7f8fa;
   --color-brand-section: #f5f6f9;
   --color-brand-border: #dfe1ec;
-  --color-brand-divider: #e9ebf2;
+  --color-brand-divider: #e9eaf2;
   --color-urgent: #f5610a;
   --color-wishlist: #ff3b5c;
   --color-dark-bg: #030a1b;
@@ -60,7 +60,7 @@
   --brand-bg: #f7f8fa;
   --brand-section: #f5f6f9;
   --brand-border: #dfe1ec;
-  --brand-divider: #e9ebf2;
+  --brand-divider: #e9eaf2;
   --urgent: #f5610a;
   --wishlist: #ff3b5c;
   font-family: 'Sakr Soft', Arial, sans-serif;
@@ -163,7 +163,7 @@ button {
   z-index: 8;
   display: flex;
   flex-direction: column;
-  border-radius: 20px 20px 0 0;
+  border-radius: 16px 16px 0 0;
   background: #fff;
   box-shadow: 0 -12px 34px rgba(0, 0, 0, .22);
   overflow: hidden;
@@ -226,7 +226,7 @@ button {
   width: 100%;
   max-width: 440px;
   padding: 22px 22px max(30px, env(safe-area-inset-bottom));
-  border-radius: 12px 12px 0 0;
+  border-radius: 16px 16px 0 0;
   background: #fff;
   animation: sheet-up .28s cubic-bezier(.22, 1, .36, 1) both
 }
@@ -238,7 +238,7 @@ button {
 }
 
 .share h2 {
-  font-size: 17px
+  font-size: 16px
 }
 
 .share header button {
