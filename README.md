@@ -1,15 +1,16 @@
 # 4Sale Reels
 
-A responsive vertical-video listing feed designed for integration into the 4Sale website as a webview. It uses the official 4Sale visual tokens, Sakr Soft fonts, and production-derived listing fixtures with public media URLs.
+A responsive vertical-video listing feed designed for integration into the 4Sale website as a webview. It uses the official 4Sale visual tokens, Sakr Soft fonts, and the live Reels feed API.
 
 ## Run locally
 
 ```bash
 npm ci
+cp .env.example .env   # points at the staging API
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:5173` by default.
+Vite serves the app at `http://localhost:5173` by default. The app always talks to a real API; `VITE_API_BASE_URL` selects which one (empty = same origin).
 
 ## Commands
 
@@ -26,13 +27,14 @@ npm run preview  # Preview the production bundle locally
 src/
 ├── app/                    # Application composition and page-level state
 ├── features/reels/
+│   ├── api/                # DTOs, HTTP client, mappers, and the ReelsSource port
 │   ├── components/         # Focused presentation components
-│   ├── data/               # Sanitized production-derived fixtures
+│   ├── hooks/              # Feed pagination and lazy detail fetching
 │   └── types.ts            # Domain and UI state types
 └── styles/                 # Global tokens and responsive styling
 ```
 
-The listing data is kept outside the UI, components are module-level and focused, navigation callbacks are stable, and transient interaction state stays close to the page that owns it. Replace `data/listings.ts` with a repository/query layer when the feed API is available; presentation components should continue to consume the `Listing` type.
+Wire formats stay in `api/dto.ts` and are translated by `api/mappers.ts` into the app's `Listing` type, so no presentation component depends on the backend's field names. `api/reelsSource.ts` is the port: swapping backends means adding one implementation, not touching the UI.
 
 ## Current behavior
 

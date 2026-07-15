@@ -26,13 +26,7 @@
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
     "globals": "latest",
-    "msw": "^2.15.0",
     "typescript": "latest",
     "typescript-eslint": "latest"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
   }
 }

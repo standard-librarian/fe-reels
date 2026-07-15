@@ -19,14 +19,14 @@ export type SellerDTO = {
   category_label?: string
 }
 
+// The wire says "favorite"; the product calls it a wishlist. The mapper is where
+// that translation happens, so nothing above the API layer says "favorite".
+// TODO(backend): fav_count is null on every listing today, so the count always
+// renders as 0. Confirm whether a real count can be exposed.
 export type StatsDTO = {
   views?: number
-  // TODO(contract): the FeedItem example used is_favorite/fav_count, but the
-  // field-mapping table says the backend only has is_wishlist (bool) and no
-  // count today. Standardizing on "wishlist" — confirm a wishlist_count can be
-  // exposed (fallback: show views).
-  wishlist_count?: number
-  is_wishlist?: boolean
+  fav_count?: number | null
+  is_favorite?: boolean
 }
 
 export type FeedItemDTO = {
@@ -60,35 +60,36 @@ export type FeedResponseDTO = {
   }
 }
 
-// ----- Detail endpoint (V5 AdvertisementResource) — only the fields we use -----
+// ----- Detail endpoint (live AdvertisementResource) — only the fields we use -----
 
-export type DetailAttributeDTO = { id?: number; val: string; labels_en?: string }
+export type DetailTextDTO = {
+  original?: string
+  translated?: string
+}
 
 export type DetailUserDTO = {
   user_id: number
-  first_name: string
+  name?: string
   image?: string | null
-  member_since?: string
-  listings_count?: number
+  phone?: string
   is_verified?: boolean
 }
 
-export type DetailCategoryDTO = { cat_id?: number; name?: string; breadcrumb?: string }
-export type DetailDistrictDTO = { district_id?: number; name?: string }
+export type DetailCategoryDTO = { id: number; name_en?: string; name_ar?: string }
+export type DetailDistrictDTO = { id: number; name_en?: string; name_ar?: string }
 
 export type ReelDetailDTO = {
-  user_adv_id: string
-  title: string
-  description?: string
-  price: string
-  currency?: string
+  id: string
+  title: DetailTextDTO
+  description?: DetailTextDTO
+  price: string | number
+  ad_asking_price?: string | number
   video_url?: string
-  phone?: string
-  user_view_count?: number
+  contact_no?: string
   date_published?: string
-  extra_attributes?: DetailAttributeDTO[]
-  category?: DetailCategoryDTO
-  district?: DetailDistrictDTO
+  categories?: DetailCategoryDTO[]
+  districts?: DetailDistrictDTO[]
+  district_full_path_en?: string[]
   user?: DetailUserDTO
 }
 

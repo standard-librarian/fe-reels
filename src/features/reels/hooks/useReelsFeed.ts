@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { reelsSource } from '../api/reelsSource'
 import type { Listing } from '../types'
 
-const PAGE_LIMIT = 6
+// Fetch a full reel batch at once; the UI prefetches the next batch before the
+// viewer reaches the end, rather than making a request for each visible reel.
+const PAGE_LIMIT = 10
 
 type FeedState = {
   listings: Listing[]
