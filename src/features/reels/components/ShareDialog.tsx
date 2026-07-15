@@ -26,9 +26,14 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
     window.setTimeout(() => setCopied(false), 1600)
   }
 
+  // Messenger has no app-id-free web share endpoint: its Send Dialog requires a
+  // registered Facebook App ID. The app scheme is what works in a mobile webview,
+  // which is where this ships.
+  // TODO: register a Facebook App ID so desktop can fall back to
+  // facebook.com/dialog/send — today the Messenger button is a no-op on desktop.
   const apps = [
     { key: 'wa', label: 'WhatsApp', color: 'text-[#25d366]', href: `https://wa.me/?text=${enc(url)}`, glyph: <Wa /> },
-    { key: 'msg', label: 'Messenger', color: 'text-[#0084ff]', href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`, glyph: <Messenger /> },
+    { key: 'msg', label: 'Messenger', color: 'text-[#0084ff]', href: `fb-messenger://share/?link=${enc(url)}`, glyph: <Messenger /> },
     { key: 'fb', label: 'Facebook', color: 'text-[#1877f2]', href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`, glyph: <Facebook /> },
     { key: 'x', label: 'X', color: 'text-black', href: `https://twitter.com/intent/tweet?url=${enc(url)}`, glyph: <XLogo /> },
   ]
@@ -46,7 +51,8 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
             <a
               key={app.key}
               href={app.href}
-              target="_blank"
+              // An app scheme must open in place — _blank would strand an empty tab.
+              target={app.href.startsWith('http') ? '_blank' : undefined}
               rel="noreferrer"
               aria-label={app.label}
               className={`w-14 h-14 grid place-items-center rounded-full bg-brand-section ${app.color}`}

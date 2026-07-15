@@ -4,15 +4,15 @@ import type { Listing } from '../types'
 type ListingDetailsProps = {
   listing: Listing
   expanded: boolean
-  favorite: boolean
+  wishlisted: boolean
   onExpand: () => void
-  onFavorite: () => void
+  onWishlist: () => void
   onChat: () => void
   onCall: () => void
   onShare: () => void
 }
 
-export function ListingDetails({ listing, expanded, favorite, onExpand, onFavorite, onChat, onCall, onShare }: ListingDetailsProps) {
+export function ListingDetails({ listing, expanded, wishlisted, onExpand, onWishlist, onChat, onCall, onShare }: ListingDetailsProps) {
   return <div className="flex flex-col">
     <div className="flex flex-wrap gap-1.5 mb-4">{['sellerCat' as const, 'used' as const].map((key, i) => <span key={i} className="px-3 py-[5px] rounded-full bg-brand-section text-brand-muted text-xs font-semibold">{key === 'used' ? 'Used' : listing.sellerCat}</span>)}</div>
 
@@ -27,7 +27,7 @@ export function ListingDetails({ listing, expanded, favorite, onExpand, onFavori
     </div>
 
     <div className="flex gap-2 mb-5">
-      <button className={`flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px] ld-fav ${favorite ? '!text-fav !border-[#ffd0d8] !bg-[#fff5f7]' : ''}`} onClick={onFavorite}><Heart fill={favorite ? 'currentColor' : 'none'} /> {favorite ? 'Wishlisted' : 'Wishlist'}</button>
+      <button className={`flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px] ld-wishlist ${wishlisted ? '!text-wishlist !border-[#ffd0d8] !bg-[#fff5f7]' : ''}`} onClick={onWishlist}><Heart fill={wishlisted ? 'currentColor' : 'none'} /> {wishlisted ? 'Wishlisted' : 'Wishlist'}</button>
       <button className="ld-share flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px]" onClick={onShare}><Share2 /> Share</button>
       <button className="ld-offer flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px]"><Tag /> Make offer</button>
     </div>

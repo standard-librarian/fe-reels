@@ -13,10 +13,13 @@ export type FeedPage = { listings: Listing[]; nextCursor: string | null; hasMore
 
 const REELS_API_PATH = '/api/v1/reels'
 
+// TODO(backend): no endpoint exists to persist a wishlist entry, so the heart is
+// local-only today — tap it, reload, and it is gone. Add `toggleWishlist(id)`
+// here once the write endpoint lands; the UI already calls through a single
+// handler and will not need to change.
 export interface ReelsSource {
   getFeed(params?: FeedParams): Promise<FeedPage>
   getListingDetail(id: string): Promise<Listing>
-  incrementViews(id: string): Promise<void>
 }
 
 export class HttpReelsSource implements ReelsSource {
@@ -36,9 +39,6 @@ export class HttpReelsSource implements ReelsSource {
     return detailToListing(res.data)
   }
 
-  async incrementViews(id: string): Promise<void> {
-    await apiGet(`/v2/increment-views/${id}`)
-  }
 }
 
 export const reelsSource: ReelsSource = new HttpReelsSource()
