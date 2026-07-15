@@ -3,6 +3,10 @@ import type { Listing } from '../types'
 import { VideoStage } from './VideoStage'
 
 const PRELOAD_AHEAD = 2
+// Keeping the reel behind the viewer mounted costs one more decoder but means a
+// backward swipe resumes an already-buffered video instead of re-downloading it
+// with no head start — the one direction that had no preload at all.
+const KEEP_BEHIND = 1
 
 type ReelFeedProps = {
   listings: Listing[]
@@ -27,6 +31,7 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
   const isScrolling = useRef(false)
   const scrollTimer = useRef<number | undefined>(undefined)
   const tapStart = useRef<{ x: number; y: number; t: number } | null>(null)
+  const startedIndex = useRef<number | null>(null)
 
   // register video refs from children
   const registerVideo = useCallback((index: number, el: HTMLVideoElement | null) => {
@@ -74,6 +79,15 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
   useEffect(() => {
     videoRefs.current.forEach((video, idx) => {
       if (idx === currentIndex) {
+        // Arriving at a reel always plays it from the top: a reel kept mounted
+        // behind the viewer is paused mid-way, and resuming there is not what a
+        // reel feed does. Gated on the reel actually changing, because this
+        // effect also re-runs when the mounted set shifts — rewinding then would
+        // restart the reel being watched.
+        if (startedIndex.current !== currentIndex) {
+          video.currentTime = 0
+          startedIndex.current = currentIndex
+        }
         void video.play().catch(() => {})
       } else {
         video.pause()
@@ -133,7 +147,7 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
           muted={muted}
           detailsOpen={detailsOpen}
           isActive={idx === currentIndex}
-          shouldMountVideo={idx >= currentIndex && idx <= currentIndex + PRELOAD_AHEAD}
+          shouldMountVideo={idx >= currentIndex - KEEP_BEHIND && idx <= currentIndex + PRELOAD_AHEAD}
           videoIndex={idx}
           onMute={onMute}
           registerVideo={registerVideo}

@@ -19,14 +19,14 @@ export type SellerDTO = {
   category_label?: string
 }
 
+// The wire says "favorite"; the product calls it a wishlist. The mapper is where
+// that translation happens, so nothing above the API layer says "favorite".
+// TODO(backend): fav_count is null on every listing today, so the count always
+// renders as 0. Confirm whether a real count can be exposed.
 export type StatsDTO = {
   views?: number
-  // TODO(contract): the FeedItem example used is_favorite/fav_count, but the
-  // field-mapping table says the backend only has is_wishlist (bool) and no
-  // count today. Standardizing on "wishlist" — confirm a wishlist_count can be
-  // exposed (fallback: show views).
-  wishlist_count?: number
-  is_wishlist?: boolean
+  fav_count?: number | null
+  is_favorite?: boolean
 }
 
 export type FeedItemDTO = {
