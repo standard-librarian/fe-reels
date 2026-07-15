@@ -9,6 +9,7 @@ import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
+import { formatCount } from '../features/reels/api/mappers'
 
 const PREFETCH_REMAINING_REELS = 3
 
@@ -24,6 +25,7 @@ export function App() {
   const [wishlistToast, setWishlistToast] = useState(false)
   const toastTimer = useRef<number | undefined>(undefined)
   const feedRef = useRef<ReelFeedHandle>(null)
+  const justFavorited = useRef<string | null>(null)
 
   const safeIndex = listings.length ? Math.min(index, listings.length - 1) : 0
   const listing = listings[safeIndex]
@@ -62,7 +64,7 @@ export function App() {
     if (!wasWishlisted) {
       setWishlistToast(true)
       window.clearTimeout(toastTimer.current)
-      toastTimer.current = window.setTimeout(() => setWishlistToast(false), 3000)
+      toastTimer.current = window.setTimeout(() => setWishlistToast(false), 1200)
     } else {
       setWishlistToast(false)
       window.clearTimeout(toastTimer.current)
@@ -73,6 +75,7 @@ export function App() {
     setIndex(idx)
     setDetailsOpen(false)
     setDescriptionExpanded(false)
+    justFavorited.current = null
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
   }, [listings.length, loadMore])
 

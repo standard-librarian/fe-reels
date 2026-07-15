@@ -42,7 +42,7 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
     <div className="fixed inset-0 z-100 flex items-end justify-center bg-[#060a1680] backdrop-blur-[3px] animate-[fade-in_0.2s_ease_both]" onClick={onClose}>
       <div className="w-full max-w-[440px] px-[22px] pt-[22px] pb-[max(30px,env(safe-area-inset-bottom))] rounded-t-xl bg-white animate-[sheet-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]" onClick={e => e.stopPropagation()}>
         <header className="flex items-center justify-between pb-4 border-b border-brand-divider">
-          <h2 className="text-[19px] font-extrabold text-brand-navy">Share ad</h2>
+          <h2 className="text-[18px] font-bold text-brand-navy">Share ad</h2>
           <button className="w-[34px] h-[34px] grid place-items-center border-0 rounded-full bg-brand-section text-brand-text" onClick={onClose} aria-label="Close"><X /></button>
         </header>
 
@@ -66,7 +66,7 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
         <div className="flex items-center gap-[9px] p-2.5 rounded-lg bg-brand-section text-brand-muted text-[11px] [&>svg]:w-[18px]">
           <Link />
           <span className="flex-1 overflow-hidden">{url}</span>
-          <button className="flex items-center gap-1.5 py-[9px] px-3.5 border-0 rounded-[7px] bg-brand-primary text-white font-bold shrink-0" onClick={copy}>
+          <button className="flex items-center gap-1.5 py-[9px] px-3.5 border-0 rounded-sm bg-brand-primary text-white font-bold shrink-0" onClick={copy}>
             {copied ? <><Check size={14} /> Copied</> : 'Copy'}
           </button>
         </div>

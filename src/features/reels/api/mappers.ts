@@ -17,6 +17,14 @@ export function initialsFrom(name: string): string {
   return (first + second).toUpperCase() || '4S'
 }
 
+/** Compact count for display: 2000 -> "2K", 1500000 -> "1.5M", etc. */
+export function formatCount(n: number): string {
+  if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(1)}B`
+  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${+(n / 1_000).toFixed(1)}K`
+  return String(n)
+}
+
 /** Group thousands for display: "3200" -> "3,200". Leaves non-numeric as-is. */
 export function formatPrice(raw: string | number): string {
   const n = Number(String(raw).replace(/[^\d.]/g, ''))
