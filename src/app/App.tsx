@@ -10,10 +10,12 @@ import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
 import { formatCount } from '../features/reels/api/mappers'
+import { useAuth } from '../context/AuthContext'
 
 const PREFETCH_REMAINING_REELS = 3
 
 export function App() {
+  const { isAuthenticated } = useAuth()
   const { listings, loading, error, loadMore, retry } = useReelsFeed()
   const [index, setIndex] = useState(0)
   const [muted, setMuted] = useState(true)
@@ -54,6 +56,10 @@ export function App() {
   // wishlist entry, so it is lost on reload. Call reelsSource once the write
   // endpoint exists; the API layer is the only place that needs to change.
   const toggleWishlist = (id: string) => {
+    if (!isAuthenticated) {
+      console.log("The user is not authenticated");
+      return;
+    }
     const wasWishlisted = wishlist.has(id)
     setWishlist(current => {
       const next = new Set(current)
