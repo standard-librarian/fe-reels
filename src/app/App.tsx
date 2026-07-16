@@ -12,10 +12,13 @@ import { useReelDetail } from '../features/reels/hooks/useReelDetail'
 import { reelsSource } from '../features/reels/api/reelsSource'
 import { ApiError } from '../features/reels/api/httpClient'
 import { sendReelEvents, wishlistEvent } from '../features/reels/api/events'
+import { formatCount } from '../features/reels/api/mappers'
+import { useAuth } from '../context/AuthContext'
 
 const PREFETCH_REMAINING_REELS = 3
 
 export function App() {
+  const { isAuthenticated } = useAuth()
   const { listings, loading, error, loadMore, retry } = useReelsFeed()
   const [index, setIndex] = useState(0)
   const [muted, setMuted] = useState(true)
