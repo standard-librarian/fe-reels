@@ -18,6 +18,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const [progress, setProgress] = useState(0) // 0..1 of the active video
 
   // Only active and imminent reels receive video elements. This limits decoder
   // and bandwidth pressure while still warming the next two reels.
@@ -54,7 +55,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
         <div className="video-stage__frame relative z-2 h-full max-w-full aspect-[9/16] overflow-hidden">
           {shouldMountVideo ? <video
             ref={videoRef}
-            className="w-full h-full block object-cover bg-black"
+            className="w-full h-full block object-contain bg-black"
             src={listing.videoUrl}
             muted={muted}
             loop
@@ -65,8 +66,15 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
               setPaused(false)
               setReady(false)
               setHasError(false)
+              setProgress(0)
             }}
             onLoadedData={() => setReady(true)}
+            onTimeUpdate={event => {
+              const video = event.currentTarget
+              if (Number.isFinite(video.duration) && video.duration > 0) {
+                setProgress(video.currentTime / video.duration)
+              }
+            }}
             onPlay={() => setPaused(false)}
             onPause={() => setPaused(true)}
             onError={() => setHasError(true)}
@@ -80,6 +88,13 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
           {paused && ready && isActive && !hasError && (
             <div className="absolute inset-0 grid place-items-center z-4 animate-[pause-fade-in_0.2s_ease_both] pointer-events-none [&_svg]:text-white [&_svg]:drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
               <Pause size={32} />
+            </div>
+          )}
+          {/* Inside the frame so the frame's rounded overflow-hidden clips the bar's
+              ends to match the video's rounded corners (and leaves it square in portrait). */}
+          {isActive && ready && !hasError && (
+            <div className="progress-track absolute bottom-0 left-0 right-0 h-[3px] z-6 bg-white/25" aria-hidden="true">
+              <div className="progress-fill h-full bg-white" style={{ width: `${progress * 100}%` }} />
             </div>
           )}
         </div>

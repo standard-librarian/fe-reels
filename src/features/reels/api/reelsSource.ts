@@ -3,9 +3,11 @@
 // the mappers (returning the app's Listing model). Swapping backends = a new
 // implementation here; nothing in the UI changes.
 
-import { apiGet } from './httpClient'
-import type { DetailResponseDTO, FeedResponseDTO } from './dto'
+import { ApiError, apiGet, apiPost } from './httpClient'
+import type { AddFavoriteResponseDTO, DetailResponseDTO, FavoriteEnvelopeDTO, FeedResponseDTO, RemoveFavoriteResponseDTO } from './dto'
 import { detailToListing, feedItemToListing } from './mappers'
+import { favoritesDeviceId, favoritesUrl, signFavoriteRequest, type FavoriteAction } from './favoritesAuth'
+import { getViewerKey, userId } from './identity'
 import type { Listing } from '../types'
 
 export type FeedParams = { cursor?: string | null; limit?: number }
@@ -13,18 +15,19 @@ export type FeedPage = { listings: Listing[]; nextCursor: string | null; hasMore
 
 const REELS_API_PATH = '/api/v1/reels'
 
-// TODO(backend): no endpoint exists to persist a wishlist entry, so the heart is
-// local-only today — tap it, reload, and it is gone. Add `toggleWishlist(id)`
-// here once the write endpoint lands; the UI already calls through a single
-// handler and will not need to change.
 export interface ReelsSource {
   getFeed(params?: FeedParams): Promise<FeedPage>
   getListingDetail(id: string): Promise<Listing>
+  // Wishlist writes. Return true when the server confirms the new state.
+  addFavorite(id: string): Promise<boolean>
+  removeFavorite(id: string): Promise<boolean>
 }
 
 export class HttpReelsSource implements ReelsSource {
   async getFeed({ cursor, limit = 10 }: FeedParams = {}): Promise<FeedPage> {
-    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit })
+    // viewer_key + user_id let the backend attribute per-viewer wishlist state
+    // (is_wishlist) to this request.
+    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit, viewer_key: getViewerKey(), user_id: userId })
     return {
       listings: res.data.items.map(feedItemToListing),
       nextCursor: res.data.paging.next_cursor,
@@ -39,6 +42,31 @@ export class HttpReelsSource implements ReelsSource {
     return detailToListing(res.data)
   }
 
+  // Favorites live on a different host (the 4Sale services API) and need a signed
+  // request, so they go through apiPost with headers from signFavoriteRequest —
+  // not the same-origin apiGet the feed uses.
+  async addFavorite(id: string): Promise<boolean> {
+    const res = await this.postFavorite<AddFavoriteResponseDTO>('addFavorite', id)
+    return res?.response?.is_favorite === 1
+  }
+
+  async removeFavorite(id: string): Promise<boolean> {
+    const res = await this.postFavorite<RemoveFavoriteResponseDTO>('removeFavorite', id)
+    return res?.response?.is_removed === 1
+  }
+
+  private async postFavorite<T extends FavoriteEnvelopeDTO>(action: FavoriteAction, id: string): Promise<T> {
+    const url = favoritesUrl(action)
+    // Serialize once: the signature hashes this exact string (see signFavoriteRequest).
+    const payloadStr = JSON.stringify({ device_id: favoritesDeviceId, adv_id: id })
+    const body = await apiPost<T>(url, payloadStr, signFavoriteRequest(url, payloadStr))
+    // This API returns HTTP 200 even on failure — surface the in-body error so
+    // callers can tell the user *why* (e.g. 422 "No Records Found", 401).
+    if (body?.error || (body?.status != null && body.status !== 200)) {
+      throw new ApiError(body.status ?? 200, `favorite_${action}_failed`, body.error?.message_en)
+    }
+    return body
+  }
 }
 
 export const reelsSource: ReelsSource = new HttpReelsSource()

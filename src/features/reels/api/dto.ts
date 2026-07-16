@@ -19,14 +19,14 @@ export type SellerDTO = {
   category_label?: string
 }
 
-// The wire says "favorite"; the product calls it a wishlist. The mapper is where
-// that translation happens, so nothing above the API layer says "favorite".
-// TODO(backend): fav_count is null on every listing today, so the count always
-// renders as 0. Confirm whether a real count can be exposed.
+// Per-viewer wishlist state on a feed item. `is_wishlist` reflects whether the
+// requesting user (see identity sent on the feed request) has wishlisted it.
+// TODO(backend): not populated yet — the feed still returns is_wishlist=false and
+// a null count regardless of the viewer. Frontend is ready for when it lands.
 export type StatsDTO = {
   views?: number
-  fav_count?: number | null
-  is_favorite?: boolean
+  wishlist_count?: number | null
+  is_wishlist?: boolean
 }
 
 export type FeedItemDTO = {
@@ -96,3 +96,14 @@ export type ReelDetailDTO = {
 export type DetailResponseDTO = { data: ReelDetailDTO }
 
 export type ApiErrorDTO = { error: string }
+
+// ----- Favorites (wishlist) writes — Favorites/addFavorite, Favorites/removeFavorite -----
+// The services API always answers HTTP 200; the real status + any error live in
+// the body. Success wraps the result in `response` (a 1 flag); failure (e.g. 422
+// "No Records Found", 401 Unauthorized) carries `error`.
+export type FavoriteEnvelopeDTO = {
+  status?: number
+  error?: { code?: number; message_en?: string; message_ar?: string }
+}
+export type AddFavoriteResponseDTO = FavoriteEnvelopeDTO & { response?: { is_favorite?: number } }
+export type RemoveFavoriteResponseDTO = FavoriteEnvelopeDTO & { response?: { is_removed?: number } }
