@@ -31,7 +31,7 @@ export class ApiError extends Error {
 
 type Params = Record<string, string | number | undefined | null>
 
-function buildUrl(path: string, params?: Params): string {
+export function buildUrl(path: string, params?: Params): string {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -54,6 +54,17 @@ async function toApiError(res: Response): Promise<ApiError> {
 
 export async function apiGet<T>(path: string, params?: Params): Promise<T> {
   const res = await fetch(buildUrl(path, params), { headers: { Accept: 'application/json' } })
+  if (!res.ok) throw await toApiError(res)
+  return (await res.json()) as T
+}
+
+
+export async function apiPost<T>(url: string, body: string, headers: Record<string, string> = {}): Promise<T> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...headers },
+    body,
+  })
   if (!res.ok) throw await toApiError(res)
   return (await res.json()) as T
 }

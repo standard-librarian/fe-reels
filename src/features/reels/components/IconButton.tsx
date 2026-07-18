@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { Loader2, type LucideIcon } from 'lucide-react'
 
 type IconButtonProps = {
   icon: LucideIcon
@@ -7,6 +7,8 @@ type IconButtonProps = {
   onClick?: () => void
   /** Selected state (e.g. wishlisted): pink filled icon, plus a one-shot pop on the click that turns it on. */
   active?: boolean
+  /** Async action in flight: show a spinner instead of the icon and ignore taps. */
+  pending?: boolean
   /** Filled brand-colour circle (e.g. the Call button). */
   primary?: boolean
   /** Circle size. 'md' (44px) is the default; 'sm' is 38px. */
@@ -33,21 +35,29 @@ const PRIMARY = '!bg-brand-primary !shadow-[0_6px_16px_rgba(0,98,255,0.5)]'
 const ACTIVE = '!text-[#ff3b5c]'
 const POP = 'animate-[wishlist-pop_0.3s_cubic-bezier(0.2,0.8,0.2,1)]'
 
-export function IconButton({ icon: Icon, label, onClick, active = false, primary = false, size = 'md', showLabel = true, className = '' }: IconButtonProps) {
+export function IconButton({ icon: Icon, label, onClick, active = false, pending = false, primary = false, size = 'md', showLabel = true, className = '' }: IconButtonProps) {
   const [pop, setPop] = useState(false)
   // The pink/filled state follows `active` so it stays correct as you move between
-  // reels. The pop animation must fire only when a click turns it on — not when
-  // swiping back onto an already-active reel flips `active` to true again.
-  const clicked = useRef(false)
+  // reels. The pop must fire only when a *click* turns it on — but the commit can
+  // be async (after a server confirm), so instead of clearing the click flag every
+  // render we keep the "intent" alive briefly. It's consumed when `active` turns
+  // on, or expires — so scrolling onto an already-active reel never pops.
+  const clickIntent = useRef(false)
+  const intentTimer = useRef<number | undefined>(undefined)
   const wasActive = useRef(active)
   useEffect(() => {
-    if (active && !wasActive.current && clicked.current) setPop(true)
+    if (active && !wasActive.current && clickIntent.current) {
+      setPop(true)
+      clickIntent.current = false
+    }
     wasActive.current = active
-    clicked.current = false
   }, [active])
 
   const handleClick = () => {
-    clicked.current = true
+    if (pending) return
+    clickIntent.current = true
+    window.clearTimeout(intentTimer.current)
+    intentTimer.current = window.setTimeout(() => { clickIntent.current = false }, 2000)
     onClick?.()
   }
 
@@ -55,9 +65,11 @@ export function IconButton({ icon: Icon, label, onClick, active = false, primary
   const circleClass = [CIRCLE, circle, primary && PRIMARY, active && ACTIVE, pop && POP].filter(Boolean).join(' ')
 
   return (
-    <button className={`${BUTTON} ${className}`} onClick={handleClick} aria-label={label}>
+    <button className={`${BUTTON} ${className}`} onClick={handleClick} aria-label={label} aria-busy={pending}>
       <span className={circleClass} onAnimationEnd={() => setPop(false)}>
-        <Icon size={icon} fill={active ? 'currentColor' : 'none'} />
+        {pending
+          ? <Loader2 size={icon} className="animate-spin" />
+          : <Icon size={icon} fill={active ? 'currentColor' : 'none'} />}
       </span>
       {showLabel && <span className="text-sm">{label}</span>}
     </button>

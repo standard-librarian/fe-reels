@@ -15,6 +15,7 @@
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "sha1": "^1.1.1",
     "tailwindcss": "^4.3.2",
     "vite": "latest"
   },
@@ -22,6 +23,7 @@
     "@eslint/js": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/sha1": "^1.1.5",
     "eslint": "latest",
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",

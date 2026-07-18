@@ -46,6 +46,7 @@ function truncate(text: string, max = 130): string {
 const listingDefaults = {
   negotiable: false,
   wishlistCount: '0',
+  wishlisted: false,
   condition: '',
   delivery: false,
   aspectLabel: '9:16 · VIDEO',
@@ -79,7 +80,8 @@ export function feedItemToListing(dto: FeedItemDTO): Listing {
     location: dto.district || '',
     views: dto.stats?.views != null ? String(dto.stats.views) : 'New',
     posted: dto.posted_label || 'Today',
-    wishlistCount: dto.stats?.fav_count != null ? String(dto.stats.fav_count) : '0',
+    wishlistCount: dto.stats?.wishlist_count != null ? String(dto.stats.wishlist_count) : '0',
+    wishlisted: Boolean(dto.stats?.is_wishlist),
   }
 }
 
