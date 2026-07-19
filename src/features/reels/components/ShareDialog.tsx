@@ -39,8 +39,8 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
   ]
 
   return (
-    <div className="fixed inset-0 z-100 flex items-end justify-center bg-[#060a1680] backdrop-blur-[3px] animate-[fade-in_0.2s_ease_both]" onClick={onClose}>
-      <div className="w-full max-w-[440px] px-[22px] pt-[22px] pb-[max(30px,env(safe-area-inset-bottom))] rounded-t-xl bg-white animate-[sheet-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-100 flex items-end justify-center bg-[rgba(6,10,22,0.5)] backdrop-blur-[4px] animate-[fade-in_0.2s_ease_both]" onClick={onClose}>
+      <div className="w-full max-w-[440px] px-[22px] pt-[22px] pb-[max(30px,env(safe-area-inset-bottom))] rounded-t-2xl glass-sheet animate-[sheet-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]" onClick={e => e.stopPropagation()}>
         <header className="flex items-center justify-between pb-4 border-b border-brand-divider">
           <h2 className="text-[18px] font-bold text-brand-navy">Share ad</h2>
           <button className="w-[34px] h-[34px] grid place-items-center border-0 rounded-full bg-brand-section text-brand-text" onClick={onClose} aria-label="Close"><X /></button>

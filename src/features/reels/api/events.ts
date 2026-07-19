@@ -4,7 +4,7 @@
 // surface an error, so failures are swallowed.
 
 import { buildUrl } from './httpClient'
-import { deviceId, userId, getViewerKey } from './identity'
+import { getDeviceId, getUserId, getViewerKey } from './identity'
 
 export type ReelEventType =
   | 'wishlist_add'
@@ -33,8 +33,8 @@ export function sendReelEvents(events: ReelEvent[]): void {
   const payload = {
     request_id: crypto.randomUUID(),
     viewer_key: getViewerKey(),
-    user_id: userId,
-    device_id: deviceId,
+    user_id: getUserId(),
+    device_id: getDeviceId(),
     client_timestamp: new Date().toISOString(),
     events,
   }

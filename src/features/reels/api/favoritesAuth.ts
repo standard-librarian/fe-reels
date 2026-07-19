@@ -2,21 +2,17 @@
 // web app's callDirectApi.ts + dataHashing.js: every write carries a per-request
 // SHA1 challenge in `X-Custom-Authorization`, plus device/source headers.
 //
-// AUTH IS TEST-ONLY FOR NOW: the device id and bearer token are static values
-// (from .env) standing in for a logged-in user, until this feature is merged
-// into the real web app where they come from cookies/session.
+// Identity (bearer token + device id) is read from the host site's cookies at
+// request time — see services/session.ts. The VITE_FAVORITES_* env values only
+// serve as fallbacks for local development without the host cookies.
 
 import sha1 from 'sha1'
-import { deviceId } from './identity'
+import { getDeviceId, getSessionToken } from '../../../services/session'
 
 const AUTH_HEADER_ID = 'com.forsale.forsale.web'
 
 const API_URL = import.meta.env.VITE_FAVORITES_API_URL ?? ''
 const API_SECRET = import.meta.env.VITE_FAVORITES_API_SECRET ?? ''
-const TOKEN = import.meta.env.VITE_FAVORITES_TOKEN
-
-/** Device id sent in the request body — the same static value used for signing. */
-export const favoritesDeviceId = deviceId
 
 export type FavoriteAction = 'addFavorite' | 'removeFavorite'
 
@@ -49,7 +45,9 @@ export function signFavoriteRequest(url: string, payloadStr: string): Record<str
     'Version-Number': 'web',
     'X-Custom-Authorization': `${AUTH_HEADER_ID} ${timestamp} ${challenge}`,
   }
+  const deviceId = getDeviceId()
+  const token = getSessionToken()
   if (deviceId) headers['Device-Id'] = deviceId
-  if (TOKEN) headers['Authorization'] = `Bearer ${TOKEN}`
+  if (token) headers['Authorization'] = `Bearer ${token}`
   return headers
 }

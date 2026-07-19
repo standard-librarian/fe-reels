@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, HeartOff, Info, MessageCircle, HeartPlus, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { ContactDialog } from '../features/reels/components/ContactDialog'
+import { ContactMenu } from '../features/reels/components/ContactMenu'
+import { LoginPrompt } from '../features/reels/components/LoginPrompt'
 import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
 import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
@@ -12,16 +14,25 @@ import { useReelDetail } from '../features/reels/hooks/useReelDetail'
 import { reelsSource } from '../features/reels/api/reelsSource'
 import { ApiError } from '../features/reels/api/httpClient'
 import { sendReelEvents, wishlistEvent } from '../features/reels/api/events'
+import { useAuth } from '../context/AuthContext'
 
 const PREFETCH_REMAINING_REELS = 3
 
+// Deep link from the host site (homepage reel cards): ?reel={id} makes that
+// reel play first. Read once at module load — the webview has no routing, so
+// the query string never changes during a session.
+const initialReelId = new URLSearchParams(window.location.search).get('reel')
+
 export function App() {
-  const { listings, loading, error, loadMore, retry } = useReelsFeed()
+  const { isAuthenticated } = useAuth()
+  const { listings, loading, error, loadMore, retry } = useReelsFeed(initialReelId)
   const [index, setIndex] = useState(0)
   const [muted, setMuted] = useState(true)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [contact, setContact] = useState<'whatsapp' | 'call' | null>(null)
+  const [contactMenuOpen, setContactMenuOpen] = useState(false)
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [wishlist, setWishlist] = useState<Set<string>>(() => new Set())
   const [wishlistPending, setWishlistPending] = useState<Set<string>>(() => new Set())
@@ -84,6 +95,11 @@ export function App() {
   // confirms — so a failure never flashes red then reverts. On success we flip +
   // toast + fire the event; on failure we show a centered error message.
   const toggleWishlist = async (id: string) => {
+    // Wishlist writes need the host site's session — ask guests to log in first.
+    if (!isAuthenticated) {
+      setLoginPromptOpen(true)
+      return
+    }
     if (wishlistPending.has(id)) return // ignore taps while one is in flight
     const wasWishlisted = wishlist.has(id)
     setWishlistError(null)
@@ -120,6 +136,7 @@ export function App() {
   const handleIndexChange = useCallback((idx: number) => {
     setIndex(idx)
     setDetailsOpen(false)
+    setContactMenuOpen(false)
     setDescriptionExpanded(false)
     justFavorited.current = null
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
@@ -155,11 +172,10 @@ export function App() {
         <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
           <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
           <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
-          <IconButton icon={MessageCircle} label="Chat" onClick={() => setContact('whatsapp')} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-          <IconButton icon={Phone} label="Call" primary onClick={() => setContact('call')} />
+          <IconButton icon={Phone} label="Contact" primary onClick={() => setContactMenuOpen(true)} />
         </div>
-        {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-[42px] flex items-center gap-2 px-[22px] border-0 rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] text-brand-text text-[13px] font-bold whitespace-nowrap transition-[transform,box-shadow] duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] active:shadow-[0_4px_14px_rgba(0,0,0,0.2)] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
+        {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-transform duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
           <Info /> View details
         </button>}
         {detailsOpen && <div className="sheet absolute left-0 right-0 bottom-0 top-[12vh] z-8 flex flex-col rounded-t-[20px] bg-white shadow-[0_-12px_34px_rgba(0,0,0,0.22)] overflow-hidden pointer-events-auto animate-[sheet-up_0.34s_cubic-bezier(0.22,1,0.36,1)_both] [&_.ld-wishlist]:hidden [&_.ld-share]:hidden">
@@ -171,8 +187,8 @@ export function App() {
         </div>}
       </div>
       <nav className="reel-nav absolute right-3.5 top-1/2 -translate-y-1/2 z-6 hidden flex-col items-center gap-3 text-white" aria-label="Reel navigation">
-        <button className="w-[52px] h-[52px] grid place-items-center border border-white/19 rounded-full bg-black/34 backdrop-blur-[8px] text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px] disabled:opacity-30 disabled:pointer-events-none" onClick={() => navigate(-1)} disabled={safeIndex === 0} aria-label="Previous reel"><ChevronUp /></button>
-        <button className="w-[52px] h-[52px] grid place-items-center border border-white/19 rounded-full bg-black/34 backdrop-blur-[8px] text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px] disabled:opacity-30 disabled:pointer-events-none" onClick={() => navigate(1)} disabled={safeIndex >= listings.length - 1} aria-label="Next reel"><ChevronDown /></button>
+        <button className="w-[52px] h-[52px] grid place-items-center rounded-full glass text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px] disabled:opacity-30 disabled:pointer-events-none" onClick={() => navigate(-1)} disabled={safeIndex === 0} aria-label="Previous reel"><ChevronUp /></button>
+        <button className="w-[52px] h-[52px] grid place-items-center rounded-full glass text-white transition-transform duration-[160ms] ease-out active:scale-[0.92] [&_svg]:w-[22px] disabled:opacity-30 disabled:pointer-events-none" onClick={() => navigate(1)} disabled={safeIndex >= listings.length - 1} aria-label="Next reel"><ChevronDown /></button>
       </nav>
     </section>
 
@@ -182,11 +198,11 @@ export function App() {
         own drop-in transform can't knock it off-center (which pushed it to the left). */}
     {(wishlistToast || wishlistError) && <div className="absolute inset-x-0 top-[max(40px,calc(env(safe-area-inset-top)+8px))] z-20 flex justify-center px-4 pointer-events-none">
       {wishlistError
-        ? <div className="flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-[#ef4444]" role="alert" aria-live="assertive">
+        ? <div className="flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-[linear-gradient(140deg,rgba(255,255,255,0.9),rgba(255,255,255,0.98))] backdrop-blur-[18px] backdrop-saturate-[1.8] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-[#ef4444]" role="alert" aria-live="assertive">
             <HeartOff size={18} />
             <span>{wishlistError}</span>
           </div>
-        : <div className="flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-white shadow-[0_8px_28px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-wishlist [&_svg]:fill-wishlist" role="status" aria-live="polite">
+        : <div className="flex items-center gap-2.5 py-3 px-[18px] rounded-full bg-[linear-gradient(140deg,rgba(255,255,255,0.9),rgba(255,255,255,0.98))] backdrop-blur-[18px] backdrop-saturate-[1.8] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.28)] text-[13px] font-bold whitespace-nowrap animate-[toast-down_0.3s_cubic-bezier(0.22,1,0.36,1)_both] pointer-events-auto [&_svg]:text-wishlist [&_svg]:fill-wishlist" role="status" aria-live="polite">
             <Heart size={18} />
             <span>Added to Wishlist</span>
           </div>}
@@ -194,6 +210,19 @@ export function App() {
 
     {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)} /> : null}
 
+    {contactMenuOpen ? (
+      <ContactMenu
+        phone={listing.phone ?? ''}
+        onCall={() => {
+          setContactMenuOpen(false)
+          setContact('call')
+        }}
+        onClose={() => setContactMenuOpen(false)}
+      />
+    ) : null}
+
     {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} onClose={() => setContact(null)} /> : null}
+
+    {loginPromptOpen ? <LoginPrompt onClose={() => setLoginPromptOpen(false)} /> : null}
   </main>
 }

@@ -6,8 +6,8 @@
 import { ApiError, apiGet, apiPost } from './httpClient'
 import type { AddFavoriteResponseDTO, DetailResponseDTO, FavoriteEnvelopeDTO, FeedResponseDTO, RemoveFavoriteResponseDTO } from './dto'
 import { detailToListing, feedItemToListing } from './mappers'
-import { favoritesDeviceId, favoritesUrl, signFavoriteRequest, type FavoriteAction } from './favoritesAuth'
-import { getViewerKey, userId } from './identity'
+import { favoritesUrl, signFavoriteRequest, type FavoriteAction } from './favoritesAuth'
+import { getDeviceId, getUserId, getViewerKey } from './identity'
 import type { Listing } from '../types'
 
 export type FeedParams = { cursor?: string | null; limit?: number }
@@ -27,7 +27,7 @@ export class HttpReelsSource implements ReelsSource {
   async getFeed({ cursor, limit = 10 }: FeedParams = {}): Promise<FeedPage> {
     // viewer_key + user_id let the backend attribute per-viewer wishlist state
     // (is_wishlist) to this request.
-    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit, viewer_key: getViewerKey(), user_id: userId })
+    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit, viewer_key: getViewerKey(), user_id: getUserId() })
     return {
       listings: res.data.items.map(feedItemToListing),
       nextCursor: res.data.paging.next_cursor,
@@ -58,7 +58,7 @@ export class HttpReelsSource implements ReelsSource {
   private async postFavorite<T extends FavoriteEnvelopeDTO>(action: FavoriteAction, id: string): Promise<T> {
     const url = favoritesUrl(action)
     // Serialize once: the signature hashes this exact string (see signFavoriteRequest).
-    const payloadStr = JSON.stringify({ device_id: favoritesDeviceId, adv_id: id })
+    const payloadStr = JSON.stringify({ device_id: getDeviceId(), adv_id: id })
     const body = await apiPost<T>(url, payloadStr, signFavoriteRequest(url, payloadStr))
     // This API returns HTTP 200 even on failure — surface the in-body error so
     // callers can tell the user *why* (e.g. 422 "No Records Found", 401).
