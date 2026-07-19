@@ -13,7 +13,7 @@ import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
 import { reelsSource } from '../features/reels/api/reelsSource'
 import { ApiError } from '../features/reels/api/httpClient'
-import { sendReelEvents, wishlistEvent } from '../features/reels/api/events'
+import { impressionEvent, sendReelEvents, wishlistEvent } from '../features/reels/api/events'
 import { useAuth } from '../context/AuthContext'
 import { reelsAnalytics } from '../features/reels/analytics'
 
@@ -156,6 +156,7 @@ export function App() {
     if (opened && lastImpressionIdx.current !== idx) {
       lastImpressionIdx.current = idx
       reelsAnalytics.reelOpened(opened, idx)
+      sendReelEvents([impressionEvent(opened.id, idx)])
     }
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
   }, [listings, loadMore])
