@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Share2, Volume2, VolumeX } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { ContactDialog } from '../features/reels/components/ContactDialog'
-import { ContactMenu } from '../features/reels/components/ContactMenu'
+import { ContactSpeedDial } from '../features/reels/components/ContactSpeedDial'
 import { LoginPrompt } from '../features/reels/components/LoginPrompt'
 import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
@@ -202,7 +202,14 @@ export function App() {
           <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={toggleMute} />
           <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-          <IconButton icon={Phone} label="Contact" primary onClick={() => setContactMenuOpen(true)} />
+          <ContactSpeedDial
+            open={contactMenuOpen}
+            phone={listing.phone ?? ''}
+            onToggle={() => setContactMenuOpen(current => !current)}
+            onClose={() => setContactMenuOpen(false)}
+            onChat={() => setContact('whatsapp')}
+            onCall={() => setContact('call')}
+          />
         </div>
         {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-transform duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
           <Info /> View details
@@ -238,17 +245,6 @@ export function App() {
     </div>}
 
     {shareOpen ? <ShareDialog id={listing.id} listing={listing} rank={safeIndex} onClose={() => setShareOpen(false)} /> : null}
-
-    {contactMenuOpen ? (
-      <ContactMenu
-        phone={listing.phone ?? ''}
-        onCall={() => {
-          setContactMenuOpen(false)
-          setContact('call')
-        }}
-        onClose={() => setContactMenuOpen(false)}
-      />
-    ) : null}
 
     {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} listing={listing} rank={safeIndex} onClose={() => setContact(null)} /> : null}
 
