@@ -25,9 +25,15 @@ export interface ReelsSource {
 
 export class HttpReelsSource implements ReelsSource {
   async getFeed({ cursor, limit = 10 }: FeedParams = {}): Promise<FeedPage> {
-    // viewer_key + user_id let the backend attribute per-viewer wishlist state
-    // (is_wishlist) to this request.
-    const res = await apiGet<FeedResponseDTO>(`${REELS_API_PATH}/feed`, { cursor, limit, viewer_key: getViewerKey(), user_id: getUserId() })
+    // viewer_key + user id let the backend attribute per-viewer wishlist state
+    // (is_wishlist) to this request. The contract moved the user id from a
+    // query param to the X-User-Id header.
+    const userId = getUserId()
+    const res = await apiGet<FeedResponseDTO>(
+      `${REELS_API_PATH}/feed`,
+      { cursor, limit, viewer_key: getViewerKey() },
+      userId ? { 'X-User-Id': userId } : {},
+    )
     return {
       listings: res.data.items.map(feedItemToListing),
       nextCursor: res.data.paging.next_cursor,
