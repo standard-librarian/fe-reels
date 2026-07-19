@@ -52,8 +52,8 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, code)
 }
 
-export async function apiGet<T>(path: string, params?: Params): Promise<T> {
-  const res = await fetch(buildUrl(path, params), { headers: { Accept: 'application/json' } })
+export async function apiGet<T>(path: string, params?: Params, headers: Record<string, string> = {}): Promise<T> {
+  const res = await fetch(buildUrl(path, params), { headers: { Accept: 'application/json', ...headers } })
   if (!res.ok) throw await toApiError(res)
   return (await res.json()) as T
 }
