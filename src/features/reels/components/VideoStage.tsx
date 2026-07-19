@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { BadgeCheck, MapPin, Maximize2, Pause, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 import { reelsAnalytics } from '../analytics'
@@ -12,9 +12,10 @@ type VideoStageProps = {
   videoIndex: number
   onMute: () => void
   registerVideo: (index: number, el: HTMLVideoElement | null) => void
+  renderRail?: (listing: Listing) => ReactNode
 }
 
-export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountVideo, videoIndex, onMute, registerVideo }: VideoStageProps) {
+export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountVideo, videoIndex, onMute, registerVideo, renderRail }: VideoStageProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
@@ -133,6 +134,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
           <button className="w-[38px] h-[38px] shrink-0 grid place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? <VolumeX /> : <Volume2 />}</button>
           <button className="stage-controls__fullscreen w-[38px] h-[38px] shrink-0 hidden place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.() }} aria-label="Toggle fullscreen"><Maximize2 /></button>
         </div>
+        {renderRail?.(listing)}
         {!detailsOpen && (
           <div className="seller absolute left-3.5 right-[84px] bottom-[max(74px,calc(env(safe-area-inset-bottom)+66px))] z-5 flex flex-col gap-2 text-white">
             <div className="flex items-center gap-2.5">

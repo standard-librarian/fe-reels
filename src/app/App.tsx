@@ -187,6 +187,23 @@ export function App() {
   const openShare = () => { setShareOpen(true) }
   const openDetails = () => { reelsAnalytics.detailsOpened(listing, safeIndex); setDetailsOpen(true) }
 
+  // Rendered inside every reel (via ReelFeed → VideoStage) so the buttons
+  // travel with their reel during the snap scroll, like the mute control does.
+  const renderRail = (item: typeof listing) => (
+    <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
+      <IconButton icon={wishlist.has(item.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(item.id)} pending={wishlistPending.has(item.id)} onClick={() => toggleWishlist(item.id)} />
+      <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
+      <ContactSpeedDial
+        open={contactMenuOpen && item.id === listing.id}
+        phone={item.phone ?? ''}
+        onToggle={() => setContactMenuOpen(current => !current)}
+        onClose={() => setContactMenuOpen(false)}
+        onChat={() => setContact('whatsapp')}
+        onCallSheet={() => setContact('call')}
+      />
+    </div>
+  )
+
   return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
       <ReelFeed
@@ -196,20 +213,9 @@ export function App() {
         detailsOpen={detailsOpen}
         onMute={toggleMute}
         onIndexChange={handleIndexChange}
+        renderRail={renderRail}
       />
       <div className="stage-chrome absolute inset-0 pointer-events-none">
-        <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
-          <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
-          <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-          <ContactSpeedDial
-            open={contactMenuOpen}
-            phone={listing.phone ?? ''}
-            onToggle={() => setContactMenuOpen(current => !current)}
-            onClose={() => setContactMenuOpen(false)}
-            onChat={() => setContact('whatsapp')}
-            onCallSheet={() => setContact('call')}
-          />
-        </div>
         {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-transform duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
           <Info /> View details
         </button>}

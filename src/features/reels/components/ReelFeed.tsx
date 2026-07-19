@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
 import type { Listing } from '../types'
 import { VideoStage } from './VideoStage'
 
@@ -14,6 +14,9 @@ type ReelFeedProps = {
   detailsOpen: boolean
   onMute: () => void
   onIndexChange: (index: number) => void
+  // Per-reel action rail: rendered inside each reel so the buttons travel with
+  // it during the snap scroll, exactly like the stage controls do.
+  renderRail?: (listing: Listing) => ReactNode
 }
 
 export type ReelFeedHandle = {
@@ -21,7 +24,7 @@ export type ReelFeedHandle = {
 }
 
 export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelFeed(
-  { listings, muted, detailsOpen, onMute, onIndexChange },
+  { listings, muted, detailsOpen, onMute, onIndexChange, renderRail },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -151,6 +154,7 @@ export const ReelFeed = forwardRef<ReelFeedHandle, ReelFeedProps>(function ReelF
           videoIndex={idx}
           onMute={onMute}
           registerVideo={registerVideo}
+          renderRail={renderRail}
         />
       ))}
     </div>
