@@ -57,3 +57,31 @@ export function wishlistEvent(listingId: string, rankPosition: number, added: bo
     source: 'feed',
   }
 }
+
+/** Build the impression event for a reel becoming the active one in the feed. */
+export function impressionEvent(listingId: string, rankPosition: number): ReelEvent {
+  return {
+    reel_id: `reel-${listingId}`,
+    listing_id: Number(listingId),
+    event_type: 'impression',
+    rank_position: rankPosition,
+    source: 'feed',
+  }
+}
+
+/** Build the watch-time event fired when a reel loses focus. */
+export function watchEvent(
+  listingId: string,
+  rankPosition: number,
+  { watchMs, progressPct, completed }: { watchMs: number; progressPct: number; completed: boolean },
+): ReelEvent {
+  return {
+    reel_id: `reel-${listingId}`,
+    listing_id: Number(listingId),
+    event_type: completed ? 'complete' : 'progress',
+    rank_position: rankPosition,
+    watch_ms: watchMs,
+    progress_pct: progressPct,
+    source: 'feed',
+  }
+}
