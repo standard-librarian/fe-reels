@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Check, Link, X } from 'lucide-react'
+import type { Listing } from '../types'
+import { reelsAnalytics } from '../analytics'
+import type { ShareChannel } from '../analytics'
 
 const enc = (url: string) => encodeURIComponent(url)
 
@@ -16,12 +19,13 @@ const XLogo = () => (
   <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M18.9 3H21l-6.6 7.5L22 21h-6.1l-4.3-5.6L6.5 21H4.4l7-8L3 3h6.2l3.9 5.1L18.9 3z" /></svg>
 )
 
-export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }) {
+export function ShareDialog({ id, listing, rank, onClose }: { id: string; listing: Listing; rank: number; onClose: () => void }) {
   const url = `https://www.q84sale.com/en/listing/${id}`
   const [copied, setCopied] = useState(false)
 
   const copy = () => {
     void navigator.clipboard?.writeText(url)
+    reelsAnalytics.reelShared(listing, rank, 'copy')
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1600)
   }
@@ -54,6 +58,7 @@ export function ShareDialog({ id, onClose }: { id: string; onClose: () => void }
               // An app scheme must open in place — _blank would strand an empty tab.
               target={app.href.startsWith('http') ? '_blank' : undefined}
               rel="noreferrer"
+              onClick={() => reelsAnalytics.reelShared(listing, rank, app.key as ShareChannel)}
               aria-label={app.label}
               className={`w-14 h-14 grid place-items-center rounded-full bg-brand-section ${app.color}`}
             >

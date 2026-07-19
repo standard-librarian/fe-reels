@@ -11,8 +11,10 @@ interface ImportMetaEnv {
   readonly VITE_FAVORITES_DEVICE_ID?: string
   /** Static bearer token for the logged-in test user (test-only). */
   readonly VITE_FAVORITES_TOKEN?: string
-  /** Logged-in user id sent on the feed request + events (test-only for now). */
-  readonly VITE_REELS_USER_ID?: string
+  /** Amplitude client/browser API key. Empty = analytics disabled (track() no-ops). */
+  readonly VITE_AMPLITUDE_API_KEY?: string
+  /** Fraction of sessions to record with Session Replay (0..1). Defaults to 0.1. */
+  readonly VITE_AMPLITUDE_SR_SAMPLE_RATE?: string
 }
 
 interface ImportMeta {

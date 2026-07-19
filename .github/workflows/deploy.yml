@@ -38,11 +38,19 @@ jobs:
           API_BASE_URL=""
           if [ "${{ github.ref_name }}" = "staging" ]; then
             API_BASE_URL="https://staging-services.q84sale.com"
+            VITE_FAVORITES_API_URL="https://staging-services.q84sale.com/live/index.php"
+            VITE_FAVORITES_API_SECRET="${{ secrets.VITE_FAVORITES_API_SECRET }}"
+            VITE_FAVORITES_DEVICE_ID="${{ secrets.VITE_FAVORITES_DEVICE_ID }}"
+            VITE_FAVORITES_TOKEN="${{ secrets.VITE_FAVORITES_TOKEN }}"
           fi
 
           docker build \
           --platform linux/amd64 \
           --build-arg VITE_API_BASE_URL="$API_BASE_URL" \
+          --build-arg VITE_FAVORITES_API_URL="$VITE_FAVORITES_API_URL" \
+          --build-arg VITE_FAVORITES_API_SECRET="$VITE_FAVORITES_API_SECRET" \
+          --build-arg VITE_FAVORITES_DEVICE_ID="$VITE_FAVORITES_DEVICE_ID" \
+          --build-arg VITE_FAVORITES_TOKEN="$VITE_FAVORITES_TOKEN" \
           -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.ref_name }}-latest \
           -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.ref_name }}-${{ github.run_number }} .
 
@@ -94,3 +102,4 @@ jobs:
         run: |
           kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.CONTAINER_NAME }}=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build-and-push.outputs.image_tag }} \
             --namespace ${{ env.K8S_NAMESPACE }}
+

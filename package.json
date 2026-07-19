@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.45.2",
+    "@amplitude/plugin-session-replay-browser": "^1.33.4",
     "@tailwindcss/vite": "^4.3.2",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
