@@ -75,7 +75,7 @@ export function feedItemToListing(dto: FeedItemDTO): Listing {
     sellerCat: dto.seller?.category_label || dto.district || '',
     verified: Boolean(dto.seller?.verified),
     videoUrl: dto.video.url,
-    phone: dto.phone,
+    phone: dto.contact?.phone || dto.phone,
     aspectRatio: aspectToCss(dto.video.aspect_ratio),
     location: dto.district || '',
     views: dto.stats?.views != null ? String(dto.stats.views) : 'New',

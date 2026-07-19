@@ -29,6 +29,12 @@ export type StatsDTO = {
   is_wishlist?: boolean
 }
 
+// Seller contact on a feed item. `phone` can hold several numbers separated by
+// commas (e.g. "96560666988,96566661615").
+export type ContactDTO = {
+  phone?: string
+}
+
 export type FeedItemDTO = {
   id: string
   title: string
@@ -37,12 +43,12 @@ export type FeedItemDTO = {
   category_id?: string
   video: VideoDTO
   seller: SellerDTO
+  contact?: ContactDTO
   stats: StatsDTO
   district?: string
   posted_label?: string
-  // TODO(contract): not in the MVP feed example, but available publicly in the
-  // 4Sale product. Used by Chat/Call/Share. Confirm whether phone ships on the
-  // feed or is read from the detail endpoint; share URL is built from the slug.
+  // Legacy top-level phone kept as a fallback; the live feed ships the number
+  // nested under `contact.phone`.
   phone?: string
   slug?: string
 }
