@@ -100,22 +100,23 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
         </div>
       </div>
       <div className="stage-chrome absolute inset-0 pointer-events-none">
-        <div className="stage-gradient absolute top-0 left-0 right-0 h-[120px] z-3 bg-gradient-to-b from-[rgba(0,4,12,0.55)] to-transparent pointer-events-none" aria-hidden="true" />
+        <div className="stage-gradient absolute top-0 left-0 right-0 h-[130px] z-3 bg-gradient-to-b from-[rgba(0,4,12,0.55)] to-transparent pointer-events-none" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 right-0 h-[280px] z-3 bg-gradient-to-t from-[rgba(0,4,12,0.6)] to-transparent pointer-events-none" aria-hidden="true" />
         <div className="stage-controls absolute top-[max(14px,env(safe-area-inset-top))] right-3.5 z-6 hidden gap-2 pointer-events-auto">
-          <button className="w-[38px] h-[38px] shrink-0 grid place-items-center border border-white/25 rounded-full bg-black/28 text-white backdrop-blur-[8px] [&_svg]:w-[19px]" onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? <VolumeX /> : <Volume2 />}</button>
-          <button className="stage-controls__fullscreen w-[38px] h-[38px] shrink-0 hidden place-items-center border border-white/25 rounded-full bg-black/28 text-white backdrop-blur-[8px] [&_svg]:w-[19px]" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.() }} aria-label="Toggle fullscreen"><Maximize2 /></button>
+          <button className="w-[38px] h-[38px] shrink-0 grid place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? <VolumeX /> : <Volume2 />}</button>
+          <button className="stage-controls__fullscreen w-[38px] h-[38px] shrink-0 hidden place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.() }} aria-label="Toggle fullscreen"><Maximize2 /></button>
         </div>
         {!detailsOpen && (
           <div className="seller absolute left-3.5 right-[84px] bottom-[max(74px,calc(env(safe-area-inset-bottom)+66px))] z-5 flex flex-col gap-2 text-white">
             <div className="flex items-center gap-2.5">
-              <div className="w-[38px] h-[38px] grid place-items-center shrink-0 border border-white/25 rounded-xl bg-white/16 backdrop-blur-[8px] text-white font-bold">{listing.sellerInit}</div>
+              <div className="w-10 h-10 grid place-items-center shrink-0 rounded-[13px] glass text-white text-sm font-extrabold">{listing.sellerInit}</div>
               <div className="min-w-0 flex-1">
-                <strong className="flex items-center gap-[5px] text-sm font-bold [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{listing.sellerName} {listing.verified ? <BadgeCheck size={16} /> : null}</strong>
-                <small className="flex items-center gap-[5px] mt-0.5 text-[11px] text-white/78 [text-shadow:0_1px_4px_rgba(0,0,0,0.4)]"><MapPin size={12} /> {listing.location}</small>
+                <strong className="flex items-center gap-[5px] text-sm font-bold [text-shadow:0_1px_6px_rgba(0,0,0,0.45)]">{listing.sellerName} {listing.verified ? <BadgeCheck size={16} className="text-[#4da3ff]" /> : null}</strong>
+                <small className="flex items-center gap-[5px] mt-0.5 text-[11px] text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.45)]"><MapPin size={12} /> {listing.location}</small>
               </div>
             </div>
             <p className="m-0 text-sm font-semibold leading-[1.35] [text-shadow:0_1px_6px_rgba(0,0,0,0.5)] line-clamp-2">{listing.title}</p>
-            <p className="mt-1 mb-0 text-lg font-bold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.5)]">KD {listing.price}</p>
+            <p className="mt-1 mb-0 text-lg font-extrabold text-white whitespace-nowrap [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">KD {listing.price}</p>
           </div>
         )}
       </div>
