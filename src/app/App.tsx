@@ -15,6 +15,7 @@ import { reelsSource } from '../features/reels/api/reelsSource'
 import { ApiError } from '../features/reels/api/httpClient'
 import { sendReelEvents, wishlistEvent } from '../features/reels/api/events'
 import { useAuth } from '../context/AuthContext'
+import { reelsAnalytics } from '../features/reels/analytics'
 
 const PREFETCH_REMAINING_REELS = 3
 
@@ -42,6 +43,9 @@ export function App() {
   const errorTimer = useRef<number | undefined>(undefined)
   const feedRef = useRef<ReelFeedHandle>(null)
   const justFavorited = useRef<string | null>(null)
+  // Last reel we logged an impression for, so a settling IntersectionObserver
+  // (which can fire ≥60% repeatedly) reports one impression per active reel.
+  const lastImpressionIdx = useRef<number>(-1)
   // Listings we've already seeded wishlist state from, so re-fetches / pagination
   // never re-apply the server flag over a user's in-session toggle.
   const hydratedIds = useRef<Set<string>>(new Set())
@@ -59,15 +63,20 @@ export function App() {
     feedRef.current?.scrollToReel(next)
   }, [safeIndex, listings.length])
 
+  // Single mute entry point for every path (rail button, video control, keyboard).
+  // Not tracked: mute is high-frequency and low analytical value, so it's cut from
+  // the taxonomy to save event volume.
+  const toggleMute = useCallback(() => setMuted(current => !current), [])
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowRight') navigate(1)
       if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') navigate(-1)
-      if (event.key.toLowerCase() === 'm') setMuted(current => !current)
+      if (event.key.toLowerCase() === 'm') toggleMute()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [navigate])
+  }, [navigate, toggleMute])
 
   // Seed the wishlist from the feed's per-viewer is_wishlist flag so favorites
   // survive reload. Each listing is seeded once (tracked in hydratedIds) — after
@@ -115,6 +124,10 @@ export function App() {
         toastTimer.current = window.setTimeout(() => setWishlistToast(false), 1400)
       }
       sendReelEvents([wishlistEvent(id, safeIndex, !wasWishlisted)])
+      const rank = listings.findIndex(item => item.id === id)
+      const target = rank >= 0 ? listings[rank] : listing
+      if (!wasWishlisted) reelsAnalytics.wishlistAdded(target, rank)
+      else reelsAnalytics.wishlistRemoved(target, rank)
     } catch (err) {
       const message = err instanceof ApiError && err.status === 401
         ? 'Please sign in to use your wishlist.'
@@ -139,8 +152,13 @@ export function App() {
     setContactMenuOpen(false)
     setDescriptionExpanded(false)
     justFavorited.current = null
+    const opened = listings[idx]
+    if (opened && lastImpressionIdx.current !== idx) {
+      lastImpressionIdx.current = idx
+      reelsAnalytics.reelOpened(opened, idx)
+    }
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
-  }, [listings.length, loadMore])
+  }, [listings, loadMore])
 
   // Loading / error states
   if (loading && !listings.length) {
@@ -158,6 +176,17 @@ export function App() {
 
   const shownListing = detail ?? listing
 
+  // Intent handlers: log the analytics event, then run the UI action. Reused by
+  // the action rail, the details sheet, and the details panel so every entry
+  // point into the same intent reports it once. `listing` is defined here (the
+  // component early-returns above when there's no active reel).
+  const openChat = () => { reelsAnalytics.chatOpened(listing, safeIndex); setContact('whatsapp') }
+  const openCall = () => { reelsAnalytics.callOpened(listing, safeIndex); setContact('call') }
+  // Opening the share sheet isn't tracked; `Reel Shared` fires only when a channel
+  // is actually picked (the meaningful, low-volume signal).
+  const openShare = () => { setShareOpen(true) }
+  const openDetails = () => { reelsAnalytics.detailsOpened(listing, safeIndex); setDetailsOpen(true) }
+
   return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
       <ReelFeed
@@ -165,12 +194,12 @@ export function App() {
         listings={listings}
         muted={muted}
         detailsOpen={detailsOpen}
-        onMute={() => setMuted(current => !current)}
+        onMute={toggleMute}
         onIndexChange={handleIndexChange}
       />
       <div className="stage-chrome absolute inset-0 pointer-events-none">
         <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
-          <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={() => setMuted(current => !current)} />
+          <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={toggleMute} />
           <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           <IconButton icon={Phone} label="Contact" primary onClick={() => setContactMenuOpen(true)} />
@@ -182,7 +211,7 @@ export function App() {
           <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
           <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
           <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
-            <ListingDetails listing={shownListing} expanded={descriptionExpanded} wishlisted={wishlist.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onWishlist={() => toggleWishlist(listing.id)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} />
+            <ListingDetails listing={shownListing} expanded={descriptionExpanded} wishlisted={wishlist.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onWishlist={() => toggleWishlist(listing.id)} onChat={openChat} onCall={openCall} onShare={openShare} />
           </div>
         </div>}
       </div>
@@ -192,7 +221,7 @@ export function App() {
       </nav>
     </section>
 
-    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} wishlisted={wishlist.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onChat={() => setContact('whatsapp')} onCall={() => setContact('call')} onShare={() => setShareOpen(true)} onWishlist={() => toggleWishlist(listing.id)} /> : null}
+    {detailsOpen ? <DetailsPanel listing={shownListing} expanded={descriptionExpanded} wishlisted={wishlist.has(listing.id)} onExpand={() => setDescriptionExpanded(current => !current)} onClose={() => setDetailsOpen(false)} onChat={openChat} onCall={openCall} onShare={openShare} onWishlist={() => toggleWishlist(listing.id)} /> : null}
 
     {/* Toast: a full-width flex row centers the pill horizontally, so the pill's
         own drop-in transform can't knock it off-center (which pushed it to the left). */}
@@ -208,7 +237,7 @@ export function App() {
           </div>}
     </div>}
 
-    {shareOpen ? <ShareDialog id={listing.id} onClose={() => setShareOpen(false)} /> : null}
+    {shareOpen ? <ShareDialog id={listing.id} listing={listing} rank={safeIndex} onClose={() => setShareOpen(false)} /> : null}
 
     {contactMenuOpen ? (
       <ContactMenu
@@ -221,7 +250,7 @@ export function App() {
       />
     ) : null}
 
-    {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} onClose={() => setContact(null)} /> : null}
+    {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} listing={listing} rank={safeIndex} onClose={() => setContact(null)} /> : null}
 
     {loginPromptOpen ? <LoginPrompt onClose={() => setLoginPromptOpen(false)} /> : null}
   </main>

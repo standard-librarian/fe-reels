@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BadgeCheck, MapPin, Maximize2, Pause, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
+import { reelsAnalytics } from '../analytics'
 
 type VideoStageProps = {
   listing: Listing
@@ -19,6 +20,10 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
   const [ready, setReady] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [progress, setProgress] = useState(0) // 0..1 of the active video
+  // Analytics: track the deepest point reached and when the reel became active,
+  // then emit ONE `Reel Watched` on exit (below) instead of per-milestone events.
+  const maxRatio = useRef(0)
+  const watchStart = useRef(0)
 
   // Only active and imminent reels receive video elements. This limits decoder
   // and bandwidth pressure while still warming the next two reels.
@@ -49,6 +54,25 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
     return () => window.removeEventListener('keydown', handleKey)
   }, [isActive, togglePause])
 
+  // Emit one watch summary when this reel loses focus (isActive → false) or
+  // unmounts — this single event replaces the old per-milestone + completed
+  // events. maxRatio is updated in onTimeUpdate. Skipping watchedPct 0 drops
+  // reels that were never actually played: cleaner data and fewer events.
+  useEffect(() => {
+    if (!isActive) return
+    maxRatio.current = 0
+    watchStart.current = performance.now()
+    return () => {
+      const watchedPct = Math.round(maxRatio.current * 100)
+      if (watchedPct <= 0) return
+      reelsAnalytics.reelWatched(listing, videoIndex, {
+        watchedPct,
+        completed: maxRatio.current >= 0.95,
+        dwellMs: Math.round(performance.now() - watchStart.current),
+      })
+    }
+  }, [isActive, listing, videoIndex])
+
   return (
     <div className="reel-item relative w-full h-dvh overflow-hidden bg-dark-bg grid place-items-center snap-start snap-always">
       <div className="absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
@@ -72,7 +96,10 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
             onTimeUpdate={event => {
               const video = event.currentTarget
               if (Number.isFinite(video.duration) && video.duration > 0) {
-                setProgress(video.currentTime / video.duration)
+                const ratio = video.currentTime / video.duration
+                setProgress(ratio)
+                // Track the deepest point reached; the summary is sent on exit.
+                if (isActive && ratio > maxRatio.current) maxRatio.current = ratio
               }
             }}
             onPlay={() => setPaused(false)}

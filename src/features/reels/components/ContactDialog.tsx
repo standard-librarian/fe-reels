@@ -1,8 +1,12 @@
 import { Phone, X } from 'lucide-react'
+import type { Listing } from '../types'
+import { reelsAnalytics } from '../analytics'
 
 type ContactDialogProps = {
   variant: 'whatsapp' | 'call'
   phone: string
+  listing: Listing
+  rank: number
   onClose: () => void
 }
 
@@ -12,7 +16,7 @@ export const WhatsappGlyph = () => (
   </svg>
 )
 
-export function ContactDialog({ variant, phone, onClose }: ContactDialogProps) {
+export function ContactDialog({ variant, phone, listing, rank, onClose }: ContactDialogProps) {
   const isWa = variant === 'whatsapp'
   // The contract ships one string that may pack several numbers ("123,456") —
   // show one tappable row per number.
@@ -28,11 +32,13 @@ export function ContactDialog({ variant, phone, onClose }: ContactDialogProps) {
           const digits = number.replace(/[^\d]/g, '')
           const href = isWa ? `https://wa.me/${digits}` : `tel:${number}`
           return (
-            <a key={number} className="flex items-center gap-3.5 pt-5 no-underline" href={href} target={isWa ? '_blank' : undefined} rel="noreferrer">
+            <a key={number} className="flex items-center gap-3.5 pt-5 no-underline" href={href} target={isWa ? '_blank' : undefined} rel="noreferrer" onClick={() => reelsAnalytics.contactLinkOpened(listing, rank, variant)}>
               <span className={`w-12 h-12 shrink-0 grid place-items-center rounded-full ${isWa ? 'bg-[#e7f8ee] text-[#1faa53]' : 'bg-[#e7edff] text-brand-primary'}`}>
                 {isWa ? <WhatsappGlyph /> : <Phone />}
               </span>
-              <span className="text-lg font-bold text-brand-text">{number}</span>
+              {/* amp-mask: session replay masks this element so the seller's number is
+                  never captured on the recording (the sanitizer can't scrub pixels). */}
+              <span className="amp-mask text-lg font-bold text-brand-text">{number}</span>
             </a>
           )
         }) : <p className="pt-5 text-sm font-semibold text-brand-muted">No phone number available for this listing.</p>}
