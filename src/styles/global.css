@@ -513,10 +513,6 @@ button {
     display: grid
   }
 
-  .action--rail-mute {
-    display: none
-  }
-
   .reel-nav {
     display: flex
   }

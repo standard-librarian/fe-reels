@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Share2, Volume2, VolumeX } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Share2 } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
@@ -199,7 +199,6 @@ export function App() {
       />
       <div className="stage-chrome absolute inset-0 pointer-events-none">
         <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
-          <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={toggleMute} />
           <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
           <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
           <ContactSpeedDial

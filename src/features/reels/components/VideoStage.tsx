@@ -129,7 +129,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
       <div className="stage-chrome absolute inset-0 pointer-events-none">
         <div className="stage-gradient absolute top-0 left-0 right-0 h-[130px] z-3 bg-gradient-to-b from-[rgba(0,4,12,0.55)] to-transparent pointer-events-none" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 right-0 h-[280px] z-3 bg-gradient-to-t from-[rgba(0,4,12,0.6)] to-transparent pointer-events-none" aria-hidden="true" />
-        <div className="stage-controls absolute top-[max(14px,env(safe-area-inset-top))] right-3.5 z-6 hidden gap-2 pointer-events-auto">
+        <div className="stage-controls absolute top-[max(14px,env(safe-area-inset-top))] right-3.5 z-6 flex gap-2 pointer-events-auto">
           <button className="w-[38px] h-[38px] shrink-0 grid place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={onMute} aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? <VolumeX /> : <Volume2 />}</button>
           <button className="stage-controls__fullscreen w-[38px] h-[38px] shrink-0 hidden place-items-center rounded-full glass text-white [&_svg]:w-[19px]" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.() }} aria-label="Toggle fullscreen"><Maximize2 /></button>
         </div>
