@@ -208,7 +208,7 @@ export function App() {
             onToggle={() => setContactMenuOpen(current => !current)}
             onClose={() => setContactMenuOpen(false)}
             onChat={() => setContact('whatsapp')}
-            onCall={() => setContact('call')}
+            onCallSheet={() => setContact('call')}
           />
         </div>
         {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-transform duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
