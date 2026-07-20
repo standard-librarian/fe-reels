@@ -16,6 +16,7 @@ import { ApiError } from '../features/reels/api/httpClient'
 import { impressionEvent, sendReelEvents, wishlistEvent } from '../features/reels/api/events'
 import { useAuth } from '../context/AuthContext'
 import { reelsAnalytics } from '../features/reels/analytics'
+import { listingChatUrl } from '../features/reels/webUrl'
 
 const PREFETCH_REMAINING_REELS = 3
 
@@ -181,7 +182,12 @@ export function App() {
   // the action rail, the details sheet, and the details panel so every entry
   // point into the same intent reports it once. `listing` is defined here (the
   // component early-returns above when there's no active reel).
-  const openChat = () => { reelsAnalytics.chatOpened(listing, safeIndex); setContact('whatsapp') }
+  // Chat hands off to the website: the conversation lives in the host app's
+  // Firestore-backed chat, which this webview has no client for. See
+  // listingChatUrl for why a direct /me/chats deep link can't work. New tab so
+  // the feed is still there when the conversation is done — opened straight
+  // from the click handler so popup blockers treat it as user-initiated.
+  const openChat = () => { reelsAnalytics.chatOpened(listing, safeIndex); window.open(listingChatUrl(listing.id), '_blank', 'noopener') }
   const openCall = () => { reelsAnalytics.callOpened(listing, safeIndex); setContact('call') }
   // Opening the share sheet isn't tracked; `Reel Shared` fires only when a channel
   // is actually picked (the meaningful, low-volume signal).
@@ -198,7 +204,7 @@ export function App() {
         phone={item.phone ?? ''}
         onToggle={() => setContactMenuOpen(current => !current)}
         onClose={() => setContactMenuOpen(false)}
-        onChat={() => setContact('whatsapp')}
+        onChat={openChat}
         onCallSheet={() => setContact('call')}
       />
     </div>

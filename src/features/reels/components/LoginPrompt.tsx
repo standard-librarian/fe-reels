@@ -1,4 +1,5 @@
 import { Heart, X } from 'lucide-react'
+import { loginUrl } from '../webUrl'
 
 type LoginPromptProps = {
   onClose: () => void
@@ -13,7 +14,10 @@ export function LoginPrompt({ onClose }: LoginPromptProps) {
         <span className="mx-auto w-14 h-14 grid place-items-center rounded-full bg-[#ffe9ee] text-wishlist [&_svg]:w-7 [&_svg]:h-7"><Heart /></span>
         <h2 className="mt-4 text-[18px] font-bold text-brand-navy">Login required</h2>
         <p className="mt-2 text-[14px] font-semibold leading-relaxed text-brand-muted">You need to be logged in to add listings to your wishlist.</p>
-        <button className="mt-6 w-full h-12 border-0 rounded-full bg-brand-primary text-white text-[15px] font-bold cursor-pointer" onClick={onClose}>OK</button>
+        {/* Same tab, not a new one: logging in is a flow the user continues on
+            the host site, and the session cookie it sets is what this webview
+            reads back. The X above remains the way to dismiss. */}
+        <a className="ld-login-cta mt-6 w-full h-12 flex items-center justify-center border-0 rounded-full bg-brand-primary text-white text-[15px] font-bold no-underline cursor-pointer" href={loginUrl()}>Log in</a>
       </div>
     </div>
   )
