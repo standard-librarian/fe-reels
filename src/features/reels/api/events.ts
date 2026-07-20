@@ -9,7 +9,6 @@ import { getDeviceId, getUserId, getViewerKey } from './identity'
 export type ReelEventType =
   | 'wishlist_add'
   | 'wishlist_remove'
-  | 'impression'
   | 'progress'
   | 'complete'
   | 'share'
@@ -26,6 +25,22 @@ export type ReelEvent = {
 
 const EVENTS_PATH = '/api/v1/reels/events'
 
+// Events accumulate here while the viewer stays on one reel; the whole batch is
+// POSTed as a single list on the next scroll (see flushReelEvents), so a reel's
+// wishlist + view (watch-time) events go out together instead of as separate requests.
+const queue: ReelEvent[] = []
+
+/** Queue an interaction event. Held until the next flushReelEvents() (per scroll). */
+export function enqueueReelEvent(event: ReelEvent): void {
+  queue.push(event)
+}
+
+/** POST everything queued so far as one batch and clear it. Fire-and-forget. */
+export function flushReelEvents(): void {
+  if (!queue.length) return
+  sendReelEvents(queue.splice(0))
+}
+
 /** Send a batch of interaction events. Fire-and-forget — never throws. */
 export function sendReelEvents(events: ReelEvent[]): void {
   if (!events.length) return
@@ -41,6 +56,9 @@ export function sendReelEvents(events: ReelEvent[]): void {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),
+    // keepalive lets the request finish even if it was triggered by the page
+    // being hidden/closed (the unload flush), so the last reel's batch isn't lost.
+    keepalive: true,
   }).catch(() => {
     /* telemetry is best-effort */
   })
@@ -56,17 +74,10 @@ export function wishlistEvent(listingId: string, rankPosition: number, added: bo
   }
 }
 
-/** Build the impression event for a reel becoming the active one in the feed. */
-export function impressionEvent(listingId: string, rankPosition: number): ReelEvent {
-  return {
-    reel_id: `reel-${listingId}`,
-    listing_id: Number(listingId),
-    event_type: 'impression',
-    rank_position: rankPosition,
-  }
-}
-
-/** Build the watch-time event fired when a reel loses focus. */
+// The reel-viewed event: fired once per reel when it loses focus (scroll away).
+// This single event both marks the reel as viewed (so the backend can avoid
+// re-serving it) and reports how much was watched — 'complete' if watched to the
+// end, else 'progress'. There is no separate on-arrival impression event.
 export function watchEvent(
   listingId: string,
   rankPosition: number,

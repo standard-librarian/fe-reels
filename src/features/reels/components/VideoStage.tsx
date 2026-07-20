@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { BadgeCheck, MapPin, Maximize2, Pause, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 import { reelsAnalytics } from '../analytics'
-import { sendReelEvents, watchEvent } from '../api/events'
+import { enqueueReelEvent, watchEvent } from '../api/events'
 
 type VideoStageProps = {
   listing: Listing
@@ -156,7 +156,7 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
       const completed = maxRatio.current >= 0.95
       const dwellMs = Math.round(performance.now() - watchStart.current)
       reelsAnalytics.reelWatched(listing, videoIndex, { watchedPct, completed, dwellMs })
-      sendReelEvents([watchEvent(listing.id, videoIndex, { watchMs: dwellMs, progressPct: watchedPct, completed })])
+      enqueueReelEvent(watchEvent(listing.id, videoIndex, { watchMs: dwellMs, progressPct: watchedPct, completed }))
     }
   }, [isActive, listing, videoIndex])
 
