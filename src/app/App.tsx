@@ -186,7 +186,6 @@ export function App() {
   // Opening the share sheet isn't tracked; `Reel Shared` fires only when a channel
   // is actually picked (the meaningful, low-volume signal).
   const openShare = () => { setShareOpen(true) }
-  const openDetails = () => { reelsAnalytics.detailsOpened(listing, safeIndex); setDetailsOpen(true) }
 
   return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">

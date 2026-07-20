@@ -22,7 +22,6 @@ export type ReelEvent = {
   watch_ms?: number
   visible_ms?: number
   progress_pct?: number
-  source?: string
 }
 
 const EVENTS_PATH = '/api/v1/reels/events'
@@ -54,7 +53,6 @@ export function wishlistEvent(listingId: string, rankPosition: number, added: bo
     listing_id: Number(listingId),
     event_type: added ? 'wishlist_add' : 'wishlist_remove',
     rank_position: rankPosition,
-    source: 'feed',
   }
 }
 
@@ -65,7 +63,6 @@ export function impressionEvent(listingId: string, rankPosition: number): ReelEv
     listing_id: Number(listingId),
     event_type: 'impression',
     rank_position: rankPosition,
-    source: 'feed',
   }
 }
 
@@ -81,7 +78,7 @@ export function watchEvent(
     event_type: completed ? 'complete' : 'progress',
     rank_position: rankPosition,
     watch_ms: watchMs,
+    visible_ms: watchMs,
     progress_pct: progressPct,
-    source: 'feed',
   }
 }
