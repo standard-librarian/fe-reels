@@ -22,14 +22,14 @@ export function ListingDetails({ listing, expanded, wishlisted, onExpand, onWish
     <div className="flex items-center gap-1.5 m-0 mb-4 py-2.5 px-3.5 rounded-[12px] border-l-[3px] border-l-urgent bg-[#fff5f0] text-urgent text-xs font-bold [&_svg]:w-4 [&_svg]:shrink-0"><Flame /> 5+ people interested — act fast</div>
 
     <div className="flex gap-2.5 mb-2.5">
-      <button className="flex-1 h-12 flex items-center justify-center gap-2 border-0 rounded-xl bg-brand-primary text-white font-bold text-sm [&_svg]:w-[18px]" onClick={onChat}><MessageCircle /> Chat seller</button>
-      <button className="w-12 h-12 grid place-items-center border-[1.5px] border-brand-primary rounded-xl bg-transparent text-brand-primary [&_svg]:w-5" aria-label="Call seller" onClick={onCall}><Phone /></button>
+      <button className="glass-cta flex-1 h-12 flex items-center justify-center gap-2 border-0 rounded-xl text-white font-bold text-sm transition-[box-shadow,transform,filter] duration-150 ease-out active:scale-[0.97] [&_svg]:w-[18px]" onClick={onChat}><MessageCircle /> Chat seller</button>
+      <button className="glass-chip-primary w-12 h-12 grid place-items-center rounded-xl text-brand-primary transition-[background,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.94] [&_svg]:w-5" aria-label="Call seller" onClick={onCall}><Phone /></button>
     </div>
 
     <div className="flex gap-2 mb-5">
-      <button className={`flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px] ld-wishlist ${wishlisted ? '!text-wishlist !border-[#ffd0d8] !bg-[#fff5f7]' : ''}`} onClick={onWishlist}><Heart fill={wishlisted ? 'currentColor' : 'none'} /> {wishlisted ? 'Wishlisted' : 'Wishlist'}</button>
-      <button className="ld-share flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px]" onClick={onShare}><Share2 /> Share</button>
-      <button className="ld-offer flex-1 h-10 flex items-center justify-center gap-1.5 border border-brand-border rounded-full bg-white text-brand-text text-xs font-semibold [&_svg]:w-[15px]"><Tag /> Make offer</button>
+      <button className={`glass-chip flex-1 h-10 flex items-center justify-center gap-1.5 rounded-full text-brand-text text-xs font-semibold transition-[background,border-color,box-shadow,color,transform] duration-150 ease-out active:scale-[0.96] [&_svg]:w-[15px] ld-wishlist ${wishlisted ? '!text-wishlist !border-[#ffd0d8] !bg-[#fff5f7]' : ''}`} onClick={onWishlist}><Heart fill={wishlisted ? 'currentColor' : 'none'} /> {wishlisted ? 'Wishlisted' : 'Wishlist'}</button>
+      <button className="glass-chip ld-share flex-1 h-10 flex items-center justify-center gap-1.5 rounded-full text-brand-text text-xs font-semibold transition-[background,border-color,box-shadow,color,transform] duration-150 ease-out active:scale-[0.96] [&_svg]:w-[15px]" onClick={onShare}><Share2 /> Share</button>
+      <button className="glass-chip ld-offer flex-1 h-10 flex items-center justify-center gap-1.5 rounded-full text-brand-text text-xs font-semibold transition-[background,border-color,box-shadow,color,transform] duration-150 ease-out active:scale-[0.96] [&_svg]:w-[15px]"><Tag /> Make offer</button>
     </div>
 
     <div className="flex gap-0 mb-5 border border-brand-bg rounded-xl overflow-hidden">
