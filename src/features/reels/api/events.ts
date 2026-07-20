@@ -78,10 +78,14 @@ export function wishlistEvent(listingId: string, rankPosition: number, added: bo
 // This single event both marks the reel as viewed (so the backend can avoid
 // re-serving it) and reports how much was watched — 'complete' if watched to the
 // end, else 'progress'. There is no separate on-arrival impression event.
+//
+// watch_ms and visible_ms are genuinely different once seeking exists:
+// - watch_ms   = real playback time (seeks/pauses excluded) — drives progress/complete
+// - visible_ms = wall-clock time the reel was on screen (dwell), pauses included
 export function watchEvent(
   listingId: string,
   rankPosition: number,
-  { watchMs, progressPct, completed }: { watchMs: number; progressPct: number; completed: boolean },
+  { watchMs, visibleMs, progressPct, completed }: { watchMs: number; visibleMs: number; progressPct: number; completed: boolean },
 ): ReelEvent {
   return {
     reel_id: `reel-${listingId}`,
@@ -89,7 +93,7 @@ export function watchEvent(
     event_type: completed ? 'complete' : 'progress',
     rank_position: rankPosition,
     watch_ms: watchMs,
-    visible_ms: watchMs,
+    visible_ms: visibleMs,
     progress_pct: progressPct,
   }
 }

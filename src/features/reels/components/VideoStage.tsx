@@ -19,6 +19,11 @@ type VideoStageProps = {
 // Keyboard seek step for the focused scrub bar, in seconds.
 const SEEK_STEP_SEC = 5
 
+// Largest currentTime jump between two ~4Hz timeupdate samples still treated as
+// natural playback. A real tick is ~0.25s; a seek (scrub/keyboard) jumps far more
+// or goes negative, so anything above this is a seek and doesn't count as watched.
+const MAX_NATURAL_STEP_SEC = 1
+
 const formatTime = (seconds: number) => {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const total = Math.floor(seconds)
@@ -40,10 +45,13 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
   // Whether the video was playing when the scrub began, so release resumes only
   // a reel that was actually running.
   const wasPlaying = useRef(false)
-  // Analytics: track the deepest point reached and when the reel became active,
-  // then emit ONE `Reel Watched` on exit (below) instead of per-milestone events.
-  const maxRatio = useRef(0)
-  const watchStart = useRef(0)
+  // Analytics: accumulate REAL playback time (sum of natural timeupdate deltas,
+  // seeks/pauses excluded) so watched% reflects time watched, not the furthest
+  // position reached — the two diverge once the scrub bar can seek. One `Reel
+  // Watched` is emitted on exit (below).
+  const playedSec = useRef(0)      // accumulated real playback, seconds
+  const lastSample = useRef(0)     // previous currentTime reading, to measure deltas
+  const watchStart = useRef(0)     // performance.now() at activation, for dwell (visible_ms)
 
   // Only active and imminent reels receive video elements. This limits decoder
   // and bandwidth pressure while still warming the next two reels.
@@ -143,20 +151,26 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
   }, [isActive, togglePause])
 
   // Emit one watch summary when this reel loses focus (isActive → false) or
-  // unmounts — this single event replaces the old per-milestone + completed
-  // events. maxRatio is updated in onTimeUpdate. Skipping watchedPct 0 drops
-  // reels that were never actually played: cleaner data and fewer events.
+  // unmounts. watched% is real playback time as a fraction of length (see
+  // playedSec), so seeking to the end can't fake a completion. Skipping
+  // watchedPct 0 drops reels that were never actually played.
   useEffect(() => {
     if (!isActive) return
-    maxRatio.current = 0
+    // Captured at setup (stable element for this mounted reel); duration is a live
+    // property we read at cleanup. Avoids reading videoRef.current post-unmount.
+    const video = videoRef.current
+    playedSec.current = 0
+    lastSample.current = 0
     watchStart.current = performance.now()
     return () => {
-      const watchedPct = Math.round(maxRatio.current * 100)
+      const duration = video && Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0
+      const watchedPct = duration > 0 ? Math.min(100, Math.round((playedSec.current / duration) * 100)) : 0
       if (watchedPct > 0) {
-        const completed = maxRatio.current >= 0.95
-        const dwellMs = Math.round(performance.now() - watchStart.current)
-        reelsAnalytics.reelWatched(listing, videoIndex, { watchedPct, completed, dwellMs })
-        enqueueReelEvent(watchEvent(listing.id, videoIndex, { watchMs: dwellMs, progressPct: watchedPct, completed }))
+        const completed = playedSec.current >= 0.95 * duration
+        const watchMs = Math.round(playedSec.current * 1000)              // real playback
+        const visibleMs = Math.round(performance.now() - watchStart.current) // wall-clock dwell
+        reelsAnalytics.reelWatched(listing, videoIndex, { watchedPct, completed, dwellMs: visibleMs })
+        enqueueReelEvent(watchEvent(listing.id, videoIndex, { watchMs, visibleMs, progressPct: watchedPct, completed }))
       }
       // Flush now that this reel is done: sends its queued batch (watch + any
       // wishlist) on the same scroll that leaves it. If flushing were left to the
@@ -198,8 +212,16 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
                 // While dragging, the bar follows the finger — a lagging
                 // timeupdate would otherwise yank it backwards mid-scrub.
                 if (!scrubbingRef.current) setProgress(ratio)
-                // Track the deepest point reached; the summary is sent on exit.
-                if (isActive && ratio > maxRatio.current) maxRatio.current = ratio
+                // Accumulate only natural forward playback. A seek (scrub or
+                // keyboard) or a loop wrap makes the delta too large or negative,
+                // so it's rejected — the time skipped isn't counted as watched —
+                // and we re-baseline from the new position. Scrub-drag seeks are
+                // additionally excluded up front.
+                if (isActive && !scrubbingRef.current) {
+                  const delta = video.currentTime - lastSample.current
+                  if (delta > 0 && delta <= MAX_NATURAL_STEP_SEC) playedSec.current += delta
+                }
+                lastSample.current = video.currentTime
               }
             }}
             onPlay={() => setPaused(false)}
