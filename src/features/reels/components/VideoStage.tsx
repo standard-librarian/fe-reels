@@ -16,12 +16,30 @@ type VideoStageProps = {
   renderRail?: (listing: Listing) => ReactNode
 }
 
+// Keyboard seek step for the focused scrub bar, in seconds.
+const SEEK_STEP_SEC = 5
+
+const formatTime = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
+  const total = Math.floor(seconds)
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
 export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountVideo, videoIndex, onMute, registerVideo, renderRail }: VideoStageProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [progress, setProgress] = useState(0) // 0..1 of the active video
+  const [duration, setDuration] = useState(0)
+  const [scrubbing, setScrubbing] = useState(false)
+  // Mirrors `scrubbing` for use inside event handlers and onTimeUpdate, which
+  // need the live value rather than the one captured at render.
+  const scrubbingRef = useRef(false)
+  // Whether the video was playing when the scrub began, so release resumes only
+  // a reel that was actually running.
+  const wasPlaying = useRef(false)
   // Analytics: track the deepest point reached and when the reel became active,
   // then emit ONE `Reel Watched` on exit (below) instead of per-milestone events.
   const maxRatio = useRef(0)
@@ -42,6 +60,74 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
     if (video.paused) void video.play().catch(() => {})
     else video.pause()
   }, [])
+
+  // Map a pointer x to a position in the video. The bar spans the full frame
+  // width, so the ratio is just the offset within the track's box.
+  const seekToClientX = useCallback((clientX: number) => {
+    const track = trackRef.current
+    const video = videoRef.current
+    if (!track || !video) return
+    const rect = track.getBoundingClientRect()
+    if (rect.width <= 0) return
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+    setProgress(ratio)
+    if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = ratio * video.duration
+  }, [])
+
+  const seekBy = useCallback((deltaSec: number) => {
+    const video = videoRef.current
+    if (!video || !Number.isFinite(video.duration) || video.duration <= 0) return
+    const next = Math.min(video.duration, Math.max(0, video.currentTime + deltaSec))
+    video.currentTime = next
+    setProgress(next / video.duration)
+  }, [])
+
+  // Scrub gestures stop propagation so ReelFeed's tap-to-pause never sees them;
+  // pointer capture keeps the drag alive once the finger leaves the 3px bar.
+  const handleScrubDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    const video = videoRef.current
+    if (!video) return
+    wasPlaying.current = !video.paused
+    video.pause()
+    scrubbingRef.current = true
+    setScrubbing(true)
+    event.currentTarget.setPointerCapture(event.pointerId)
+    seekToClientX(event.clientX)
+  }, [seekToClientX])
+
+  const handleScrubMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return
+    event.stopPropagation()
+    seekToClientX(event.clientX)
+  }, [seekToClientX])
+
+  const handleScrubUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return
+    event.stopPropagation()
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    scrubbingRef.current = false
+    setScrubbing(false)
+    if (wasPlaying.current) void videoRef.current?.play().catch(() => {})
+  }, [])
+
+  // Arrow keys seek while the bar has focus. They otherwise change reels (App's
+  // window listener), so the event must stop here.
+  const handleScrubKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    event.stopPropagation()
+    seekBy(event.key === 'ArrowRight' ? SEEK_STEP_SEC : -SEEK_STEP_SEC)
+  }, [seekBy])
+
+  // A reel can lose focus mid-drag (keyboard/arrow navigation), which unmounts
+  // the bar before pointerup fires. Clear the flag so progress tracking resumes
+  // when this reel comes back.
+  useEffect(() => {
+    if (isActive || !scrubbingRef.current) return
+    scrubbingRef.current = false
+    setScrubbing(false)
+  }, [isActive])
 
   // spacebar pause (only when this reel is active)
   useEffect(() => {
@@ -98,13 +184,20 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
               setReady(false)
               setHasError(false)
               setProgress(0)
+              setDuration(0)
             }}
             onLoadedData={() => setReady(true)}
+            onLoadedMetadata={event => {
+              const value = event.currentTarget.duration
+              setDuration(Number.isFinite(value) && value > 0 ? value : 0)
+            }}
             onTimeUpdate={event => {
               const video = event.currentTarget
               if (Number.isFinite(video.duration) && video.duration > 0) {
                 const ratio = video.currentTime / video.duration
-                setProgress(ratio)
+                // While dragging, the bar follows the finger — a lagging
+                // timeupdate would otherwise yank it backwards mid-scrub.
+                if (!scrubbingRef.current) setProgress(ratio)
                 // Track the deepest point reached; the summary is sent on exit.
                 if (isActive && ratio > maxRatio.current) maxRatio.current = ratio
               }
@@ -125,10 +218,42 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
             </div>
           )}
           {/* Inside the frame so the frame's rounded overflow-hidden clips the bar's
-              ends to match the video's rounded corners (and leaves it square in portrait). */}
+              ends to match the video's rounded corners (and leaves it square in portrait).
+              The hit area is far taller than the 3px bar so the drag is grabbable
+              on touch; touch-none keeps a horizontal drag from scrolling the feed. */}
           {isActive && ready && !hasError && (
-            <div className="progress-track absolute bottom-0 left-0 right-0 h-[3px] z-6 bg-white/25" aria-hidden="true">
-              <div className="progress-fill h-full bg-white" style={{ width: `${progress * 100}%` }} />
+            <div
+              ref={trackRef}
+              className="progress-scrub group absolute bottom-0 left-0 right-0 h-6 z-6 flex items-end pointer-events-auto touch-none cursor-pointer"
+              role="slider"
+              tabIndex={0}
+              aria-label="Seek video"
+              aria-valuemin={0}
+              aria-valuemax={Math.round(duration)}
+              aria-valuenow={Math.round(progress * duration)}
+              aria-valuetext={`${formatTime(progress * duration)} of ${formatTime(duration)}`}
+              onPointerDown={handleScrubDown}
+              onPointerMove={handleScrubMove}
+              onPointerUp={handleScrubUp}
+              onPointerCancel={handleScrubUp}
+              onKeyDown={handleScrubKeyDown}
+            >
+              <div className={`progress-track relative w-full bg-white/25 transition-[height] duration-150 ease-out ${scrubbing ? 'h-[5px]' : 'h-[3px] group-hover:h-[5px]'}`}>
+                <div className="progress-fill absolute inset-y-0 left-0 bg-white" style={{ width: `${progress * 100}%` }} />
+                {scrubbing && (
+                  <span
+                    className="absolute top-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+                    style={{ left: `${progress * 100}%` }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+          {/* Time readout only while scrubbing — the point of the drag is landing
+              on a specific second, so show which one. */}
+          {isActive && ready && !hasError && scrubbing && duration > 0 && (
+            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 z-6 px-2.5 py-1 rounded-full glass text-white text-xs font-bold tabular-nums pointer-events-none" aria-hidden="true">
+              {formatTime(progress * duration)} / {formatTime(duration)}
             </div>
           )}
         </div>
