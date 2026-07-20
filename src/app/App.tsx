@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Phone, Share2, Volume2, VolumeX } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, HeartOff, Info, HeartPlus, Share2 } from 'lucide-react'
 import { DetailsPanel } from '../features/reels/components/DetailsPanel'
 import { ListingDetails } from '../features/reels/components/ListingDetails'
 import { IconButton } from '../features/reels/components/IconButton'
 import { ShareDialog } from '../features/reels/components/ShareDialog'
 import { ContactDialog } from '../features/reels/components/ContactDialog'
-import { ContactMenu } from '../features/reels/components/ContactMenu'
+import { ContactSpeedDial } from '../features/reels/components/ContactSpeedDial'
 import { LoginPrompt } from '../features/reels/components/LoginPrompt'
 import { ReelFeed } from '../features/reels/components/ReelFeed'
 import type { ReelFeedHandle } from '../features/reels/components/ReelFeed'
@@ -187,6 +187,23 @@ export function App() {
   // is actually picked (the meaningful, low-volume signal).
   const openShare = () => { setShareOpen(true) }
 
+  // Rendered inside every reel (via ReelFeed → VideoStage) so the buttons
+  // travel with their reel during the snap scroll, like the mute control does.
+  const renderRail = (item: typeof listing) => (
+    <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
+      <IconButton icon={wishlist.has(item.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(item.id)} pending={wishlistPending.has(item.id)} onClick={() => toggleWishlist(item.id)} />
+      <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
+      <ContactSpeedDial
+        open={contactMenuOpen && item.id === listing.id}
+        phone={item.phone ?? ''}
+        onToggle={() => setContactMenuOpen(current => !current)}
+        onClose={() => setContactMenuOpen(false)}
+        onChat={() => setContact('whatsapp')}
+        onCallSheet={() => setContact('call')}
+      />
+    </div>
+  )
+
   return <main className={`reels-webview relative w-full h-dvh overflow-hidden bg-dark-bg ${detailsOpen ? 'reels-webview--details' : ''}`}>
     <section className="reels-player absolute inset-0 overflow-hidden bg-dark-bg grid place-items-center">
       <ReelFeed
@@ -196,18 +213,13 @@ export function App() {
         detailsOpen={detailsOpen}
         onMute={toggleMute}
         onIndexChange={handleIndexChange}
+        renderRail={renderRail}
       />
       <div className="stage-chrome absolute inset-0 pointer-events-none">
-        <div className="action-rail absolute right-3 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] z-6 flex flex-col gap-3 pointer-events-auto">
-          <IconButton className="action--rail-mute flex" icon={muted ? VolumeX : Volume2} label={muted ? 'Sound' : 'Mute'} onClick={toggleMute} />
-          <IconButton icon={wishlist.has(listing.id) ? Heart : HeartPlus} label="Wishlist" active={wishlist.has(listing.id)} pending={wishlistPending.has(listing.id)} onClick={() => toggleWishlist(listing.id)} />
-          <IconButton icon={Share2} label="Share" onClick={() => setShareOpen(true)} />
-          <IconButton icon={Phone} label="Contact" primary onClick={() => setContactMenuOpen(true)} />
-        </div>
-        {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-transform duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
+        {!detailsOpen && <button className="view-details absolute left-1/2 bottom-[max(20px,calc(env(safe-area-inset-bottom)+12px))] -translate-x-1/2 z-6 h-11 flex items-center gap-2 px-[22px] rounded-full glass-light text-brand-text text-[13px] font-bold whitespace-nowrap transition-[transform,background,box-shadow,border-color] duration-[160ms] ease-out pointer-events-auto active:scale-[0.96] [&_svg]:w-[18px] [&_svg]:text-brand-primary" onClick={() => setDetailsOpen(true)}>
           <Info /> View details
         </button>}
-        {detailsOpen && <div className="sheet absolute left-0 right-0 bottom-0 top-[12vh] z-8 flex flex-col rounded-t-[20px] bg-white shadow-[0_-12px_34px_rgba(0,0,0,0.22)] overflow-hidden pointer-events-auto animate-[sheet-up_0.34s_cubic-bezier(0.22,1,0.36,1)_both] [&_.ld-wishlist]:hidden [&_.ld-share]:hidden">
+        {detailsOpen && <div className="sheet glass-sheet absolute left-0 right-0 bottom-0 top-[12vh] z-8 flex flex-col rounded-t-[20px] shadow-[0_-12px_34px_rgba(0,0,0,0.22)] overflow-hidden pointer-events-auto animate-[sheet-up_0.34s_cubic-bezier(0.22,1,0.36,1)_both] [&_.ld-wishlist]:hidden [&_.ld-share]:hidden">
           <div className="w-11 h-[5px] mx-auto mt-2.5 mb-1 rounded-full bg-[#e1e5ec] shrink-0" />
           <button className="absolute top-3.5 right-4 w-8 h-8 grid place-items-center border-0 rounded-full bg-brand-section text-brand-muted z-2 [&_svg]:w-5" onClick={() => setDetailsOpen(false)} aria-label="Close details"><ChevronDown /></button>
           <div className="flex-1 overflow-y-auto px-[18px] py-2.5 pb-[calc(26px+env(safe-area-inset-bottom))] noscroll">
@@ -238,17 +250,6 @@ export function App() {
     </div>}
 
     {shareOpen ? <ShareDialog id={listing.id} listing={listing} rank={safeIndex} onClose={() => setShareOpen(false)} /> : null}
-
-    {contactMenuOpen ? (
-      <ContactMenu
-        phone={listing.phone ?? ''}
-        onCall={() => {
-          setContactMenuOpen(false)
-          setContact('call')
-        }}
-        onClose={() => setContactMenuOpen(false)}
-      />
-    ) : null}
 
     {contact ? <ContactDialog variant={contact} phone={listing.phone ?? ''} listing={listing} rank={safeIndex} onClose={() => setContact(null)} /> : null}
 
