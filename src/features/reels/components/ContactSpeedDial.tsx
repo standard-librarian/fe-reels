@@ -47,9 +47,12 @@ export function ContactSpeedDial({ open, phone, onToggle, onClose, onChat, onCal
   }, [open, onClose])
 
   const openWhatsapp = () => {
-    // No number to deep-link: fall back to the sheet, which explains that.
+    // No number to deep-link: fall back to the contact sheet, which says so.
+    // Deliberately not onChat() — that now navigates to the website, so a
+    // missing number would silently throw the user off-site instead of
+    // explaining the problem.
     if (!waDigits) {
-      onChat()
+      onCallSheet()
       return
     }
     window.open(`https://wa.me/${waDigits}`, '_blank', 'noopener')

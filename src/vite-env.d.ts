@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   /** Origin of the Reels API. Empty = same origin. */
   readonly VITE_API_BASE_URL?: string
+  /** Origin of the main 4Sale website, for linking a reel back to its listing page. Empty = same origin. */
+  readonly VITE_WEB_BASE_URL?: string
   /** Fully-qualified base of the 4Sale services API for favorites writes, e.g. https://dev-services.q84sale.com/live/index.php */
   readonly VITE_FAVORITES_API_URL?: string
   /** Shared secret for the X-Custom-Authorization challenge (the web app's NEXT_PUBLIC_API_SECRET). */

@@ -1,5 +1,6 @@
-import { Clock, Eye, Flame, Heart, MapPin, MessageCircle, Phone, Share2, Tag, Truck } from 'lucide-react'
+import { Clock, ExternalLink, Eye, Heart, MapPin, MessageCircle, Phone, Share2, Tag, Truck } from 'lucide-react'
 import type { Listing } from '../types'
+import { listingUrl } from '../webUrl'
 
 type ListingDetailsProps = {
   listing: Listing
@@ -17,13 +18,17 @@ export function ListingDetails({ listing, expanded, wishlisted, onExpand, onWish
     <div className="flex flex-wrap gap-1.5 mb-4">{['sellerCat' as const, 'used' as const].map((key, i) => <span key={i} className="px-3 py-[5px] rounded-full bg-brand-section text-brand-muted text-xs font-semibold">{key === 'used' ? 'Used' : listing.sellerCat}</span>)}</div>
 
     <div className="m-0 mb-1 text-[30px] font-bold tracking-[-0.5px] text-brand-primary">KD {listing.price} {listing.oldPrice ? <del className="ml-2 text-sm text-brand-muted font-medium">KD {listing.oldPrice}</del> : null}</div>
-    <h1 className="m-0 mb-3.5 text-lg font-bold leading-[1.3] text-brand-text">{listing.title}</h1>
+    <h1 className="m-0 mb-5.5 text-lg font-bold leading-[1.3] text-brand-text">{listing.title}</h1>
 
-    <div className="flex items-center gap-1.5 m-0 mb-4 py-2.5 px-3.5 rounded-[12px] border-l-[3px] border-l-urgent bg-[#fff5f0] text-urgent text-xs font-bold [&_svg]:w-4 [&_svg]:shrink-0"><Flame /> 5+ people interested — act fast</div>
 
-    <div className="flex gap-2.5 mb-2.5">
-      <button className="glass-cta flex-1 h-12 flex items-center justify-center gap-2 border-0 rounded-xl text-white font-bold text-sm transition-[box-shadow,transform,filter] duration-150 ease-out active:scale-[0.97] [&_svg]:w-[18px]" onClick={onChat}><MessageCircle /> Chat seller</button>
-      <button className="glass-chip-primary w-12 h-12 grid place-items-center rounded-xl text-brand-primary transition-[background,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.94] [&_svg]:w-5" aria-label="Call seller" onClick={onCall}><Phone /></button>
+    <div className="flex gap-2 mb-2.5">
+      <button className="glass-cta flex-1 min-w-0 h-12 flex items-center justify-center gap-1.5 border-0 rounded-xl text-white font-bold text-[13px] transition-[box-shadow,transform,filter] duration-150 ease-out active:scale-[0.97] [&_svg]:w-[17px] [&_svg]:shrink-0" onClick={onChat}><MessageCircle /> Chat seller</button>
+      {/* A real link, not a button, so middle-click and the browser's own
+          open-in-new-tab keep working. Opens in a new tab: the reel keeps
+          playing where it was instead of being torn down by the navigation.
+          rel="noopener" also denies the opened page access to window.opener. */}
+      <a className="ld-view-listing glass-chip-primary flex-1 min-w-0 h-12 flex items-center justify-center gap-1.5 rounded-xl text-brand-primary font-bold text-[13px] no-underline transition-[background,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.97] [&_svg]:w-[17px] [&_svg]:shrink-0" href={listingUrl(listing.id)} target="_blank" rel="noopener noreferrer"><ExternalLink /> View listing</a>
+      <button className="glass-chip-primary w-12 h-12 shrink-0 grid place-items-center rounded-xl text-brand-primary transition-[background,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.94] [&_svg]:w-5" aria-label="Call seller" onClick={onCall}><Phone /></button>
     </div>
 
     <div className="flex gap-2 mb-5">
