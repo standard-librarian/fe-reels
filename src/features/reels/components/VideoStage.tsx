@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { BadgeCheck, MapPin, Maximize2, Pause, Volume2, VolumeX } from 'lucide-react'
 import type { Listing } from '../types'
 import { reelsAnalytics } from '../analytics'
-import { enqueueReelEvent, watchEvent } from '../api/events'
+import { enqueueReelEvent, flushReelEvents, watchEvent } from '../api/events'
 
 type VideoStageProps = {
   listing: Listing
@@ -66,11 +66,17 @@ export function VideoStage({ listing, muted, detailsOpen, isActive, shouldMountV
     watchStart.current = performance.now()
     return () => {
       const watchedPct = Math.round(maxRatio.current * 100)
-      if (watchedPct <= 0) return
-      const completed = maxRatio.current >= 0.95
-      const dwellMs = Math.round(performance.now() - watchStart.current)
-      reelsAnalytics.reelWatched(listing, videoIndex, { watchedPct, completed, dwellMs })
-      enqueueReelEvent(watchEvent(listing.id, videoIndex, { watchMs: dwellMs, progressPct: watchedPct, completed }))
+      if (watchedPct > 0) {
+        const completed = maxRatio.current >= 0.95
+        const dwellMs = Math.round(performance.now() - watchStart.current)
+        reelsAnalytics.reelWatched(listing, videoIndex, { watchedPct, completed, dwellMs })
+        enqueueReelEvent(watchEvent(listing.id, videoIndex, { watchMs: dwellMs, progressPct: watchedPct, completed }))
+      }
+      // Flush now that this reel is done: sends its queued batch (watch + any
+      // wishlist) on the same scroll that leaves it. If flushing were left to the
+      // next scroll handler, this reel's watch event — queued here, after that
+      // handler already ran — would sit unsent until yet another scroll.
+      flushReelEvents()
     }
   }, [isActive, listing, videoIndex])
 
