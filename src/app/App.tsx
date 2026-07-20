@@ -147,9 +147,8 @@ export function App() {
   }
 
   const handleIndexChange = useCallback((idx: number) => {
-    // A scroll ends the previous reel's view: flush its queued batch (any wishlist +
-    // the reel-viewed watch event) as one POST before the new reel starts filling it.
-    flushReelEvents()
+    // Note: the leaving reel's batch is flushed by its VideoStage cleanup (which
+    // runs after this, once it has queued its watch event), not here.
     setIndex(idx)
     setDetailsOpen(false)
     setContactMenuOpen(false)
