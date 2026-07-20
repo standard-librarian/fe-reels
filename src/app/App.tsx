@@ -13,7 +13,7 @@ import { useReelsFeed } from '../features/reels/hooks/useReelsFeed'
 import { useReelDetail } from '../features/reels/hooks/useReelDetail'
 import { reelsSource } from '../features/reels/api/reelsSource'
 import { ApiError } from '../features/reels/api/httpClient'
-import { impressionEvent, sendReelEvents, wishlistEvent } from '../features/reels/api/events'
+import { enqueueReelEvent, flushReelEvents, wishlistEvent } from '../features/reels/api/events'
 import { useAuth } from '../context/AuthContext'
 import { reelsAnalytics } from '../features/reels/analytics'
 
@@ -123,7 +123,7 @@ export function App() {
         window.clearTimeout(toastTimer.current)
         toastTimer.current = window.setTimeout(() => setWishlistToast(false), 1400)
       }
-      sendReelEvents([wishlistEvent(id, safeIndex, !wasWishlisted)])
+      enqueueReelEvent(wishlistEvent(id, safeIndex, !wasWishlisted))
       const rank = listings.findIndex(item => item.id === id)
       const target = rank >= 0 ? listings[rank] : listing
       if (!wasWishlisted) reelsAnalytics.wishlistAdded(target, rank)
@@ -147,6 +147,9 @@ export function App() {
   }
 
   const handleIndexChange = useCallback((idx: number) => {
+    // A scroll ends the previous reel's view: flush its queued batch (any wishlist +
+    // the reel-viewed watch event) as one POST before the new reel starts filling it.
+    flushReelEvents()
     setIndex(idx)
     setDetailsOpen(false)
     setContactMenuOpen(false)
@@ -156,10 +159,21 @@ export function App() {
     if (opened && lastImpressionIdx.current !== idx) {
       lastImpressionIdx.current = idx
       reelsAnalytics.reelOpened(opened, idx)
-      sendReelEvents([impressionEvent(opened.id, idx)])
     }
     if (idx >= listings.length - PREFETCH_REMAINING_REELS) loadMore()
   }, [listings, loadMore])
+
+  // The last reel never gets a "next scroll" to flush it, so flush when the page is
+  // hidden or closed. keepalive on the POST (see events.ts) lets it complete on unload.
+  useEffect(() => {
+    const flushOnHide = () => { if (document.visibilityState === 'hidden') flushReelEvents() }
+    document.addEventListener('visibilitychange', flushOnHide)
+    window.addEventListener('pagehide', flushReelEvents)
+    return () => {
+      document.removeEventListener('visibilitychange', flushOnHide)
+      window.removeEventListener('pagehide', flushReelEvents)
+    }
+  }, [])
 
   // Loading / error states
   if (loading && !listings.length) {
